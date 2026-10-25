@@ -1,0 +1,26 @@
+# AlgaOps Assurance — Synthetic Scenario: Stuck Sensor
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected fault: vibration_rms_g is frozen at exactly 0.42000 for 6 consecutive
+# samples, triggering the stuck-sensor detector after the rolling window fills
+# (window_size = 5, stuck_vib_threshold_g = 0.005).
+#
+# Expected output:
+#   - seq=31..34: TRUSTED, NORMAL (window not yet full)
+#   - seq=35: VIB_STUCK flag → UNTRUSTED → DIAG_CHECK_SENSOR
+#   - seq=36: VIB_STUCK flag → UNTRUSTED → DIAG_CHECK_SENSOR
+#
+# Temperature varies normally to isolate the stuck-vibration fault.
+# The stuck sensor produces CHECK_SENSOR (not CHECK_EQUIPMENT) because
+# Trust-Gating blocks equipment evaluation when integrity is in question.
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.42000,28.2
+32000,32,0.42000,28.3
+33000,33,0.42000,28.1
+34000,34,0.42000,28.4
+35000,35,0.42000,28.0
+36000,36,0.42000,28.5
+37000,37,0.421,28.2
+38000,38,0.419,28.1
+39000,39,0.422,28.3
+40000,40,0.420,28.2

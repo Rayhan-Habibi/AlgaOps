@@ -1,0 +1,39 @@
+# AlgaOps Assurance — Synthetic Baseline Dataset
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+# These values DO NOT represent measurements from Algatek or any industrial PBR.
+# Do not treat these as validated thresholds or experimental evidence.
+#
+# Scenario: Normal steady-state operation of a healthy pump/blower.
+# 30 measurement windows at ~1-second intervals.
+# Vibration ~0.42 g (RMS), Temperature ~28.2 °C (surface).
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+1000,1,0.420,28.1
+2000,2,0.415,28.2
+3000,3,0.425,28.0
+4000,4,0.418,28.3
+5000,5,0.422,28.1
+6000,6,0.419,28.2
+7000,7,0.421,28.1
+8000,8,0.417,28.3
+9000,9,0.423,28.0
+10000,10,0.420,28.2
+11000,11,0.416,28.1
+12000,12,0.422,28.3
+13000,13,0.418,28.0
+14000,14,0.421,28.2
+15000,15,0.420,28.1
+16000,16,0.419,28.3
+17000,17,0.423,28.0
+18000,18,0.415,28.2
+19000,19,0.421,28.1
+20000,20,0.420,28.2
+21000,21,0.418,28.1
+22000,22,0.422,28.3
+23000,23,0.420,28.0
+24000,24,0.419,28.2
+25000,25,0.421,28.1
+26000,26,0.416,28.3
+27000,27,0.423,28.0
+28000,28,0.418,28.2
+29000,29,0.420,28.1
+30000,30,0.421,28.2

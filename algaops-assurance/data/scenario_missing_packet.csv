@@ -1,0 +1,24 @@
+# AlgaOps Assurance — Synthetic Scenario: Missing Packets
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected faults:
+#   - Sequence IDs 32, 33 are skipped (gap of 2 between seq 31 and 34).
+#   - Sequence ID 37 is skipped (gap of 1 between seq 36 and 38).
+#
+# Expected output:
+#   - seq=31: TRUSTED, NORMAL (first packet, no previous)
+#   - seq=34: TRUSTED (MISSING_PACKET flag, informational only), NORMAL
+#   - seq=35,36: TRUSTED, NORMAL
+#   - seq=38: TRUSTED (MISSING_PACKET flag), NORMAL
+#   - seq=39,40: TRUSTED, NORMAL
+#
+# Note: MISSING_PACKET is not a blocking flag. Records remain trusted unless
+# other blocking violations also occur.
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+34000,34,0.419,28.1
+35000,35,0.422,28.3
+36000,36,0.420,28.0
+38000,38,0.419,28.2
+39000,39,0.421,28.1
+40000,40,0.420,28.3
