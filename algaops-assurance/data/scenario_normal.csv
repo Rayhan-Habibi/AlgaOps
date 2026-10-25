@@ -1,0 +1,17 @@
+# AlgaOps Assurance — Synthetic Scenario: Normal Operation
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+# These values DO NOT represent measurements from Algatek or any industrial PBR.
+#
+# Expected output: All records TRUSTED, all outcomes DIAG_NORMAL.
+# Vibration and temperature stay near baseline mean throughout.
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+32000,32,0.419,28.1
+33000,33,0.422,28.3
+34000,34,0.420,28.0
+35000,35,0.418,28.2
+36000,36,0.421,28.1
+37000,37,0.420,28.3
+38000,38,0.419,28.0
+39000,39,0.422,28.2
+40000,40,0.420,28.1

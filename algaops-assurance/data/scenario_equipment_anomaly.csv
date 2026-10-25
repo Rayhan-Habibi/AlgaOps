@@ -1,0 +1,25 @@
+# AlgaOps Assurance — Synthetic Scenario: Equipment Anomaly
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected fault: Starting at seq=35, vibration increases significantly above
+# the baseline mean (~0.42 g), and at seq=38 temperature also rises sharply.
+# Data integrity is maintained throughout (clean sequence/timestamps).
+#
+# Expected output:
+#   - seq=31..34: TRUSTED, NORMAL (near baseline)
+#   - seq=35..37: TRUSTED, CHECK_EQUIPMENT (vibration z-score > 3.0)
+#   - seq=38..40: TRUSTED, CHECK_EQUIPMENT (both vib and temp elevated)
+#
+# This scenario demonstrates the system correctly attributing a trusted
+# anomaly to EQUIPMENT rather than SENSOR.
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+32000,32,0.420,28.1
+33000,33,0.419,28.3
+34000,34,0.421,28.0
+35000,35,1.850,28.2
+36000,36,2.100,28.5
+37000,37,2.300,29.0
+38000,38,2.500,45.0
+39000,39,2.600,47.5
+40000,40,2.800,50.0
