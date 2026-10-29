@@ -18,50 +18,23 @@
  *   - All intermediate results are checked for finiteness.
  *   - Baseline variance of zero is explicitly handled and reported.
  *
+ * The statistics (baseline.c Welford builder) and the z formula
+ * (health_methods.c health_z) are shared with the v2 engine, so the legacy
+ * API and the engine cannot drift apart.
+ *
  * DISCLAIMER: Thresholds are preliminary engineering parameters only.
  * They are NOT validated industrial diagnostic thresholds.
  */
 
 #include "../include/equipment_health.h"
+#include "../include/baseline.h"
+#include "../include/health_methods.h"
 #include "csv_reader.h"
 
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-/* =========================================================================
- * Helper: Welford online mean/variance accumulator
- * ========================================================================= */
-
-typedef struct {
-    int    n;
-    double mean;
-    double M2;    /* sum of squared deviations */
-} Welford;
-
-static void welford_init(Welford *w)
-{
-    w->n    = 0;
-    w->mean = 0.0;
-    w->M2   = 0.0;
-}
-
-static void welford_update(Welford *w, double x)
-{
-    w->n++;
-    double delta  = x - w->mean;
-    w->mean      += delta / (double)w->n;
-    double delta2 = x - w->mean;
-    w->M2        += delta * delta2;
-}
-
-/** Return population standard deviation (n denominator). */
-static double welford_std(const Welford *w)
-{
-    if (w->n < 2) return 0.0;
-    return sqrt(w->M2 / (double)w->n);
-}
 
 /* =========================================================================
  * Public API
@@ -89,18 +62,20 @@ AlgaopsStatus equipment_health_load_baseline(EquipmentHealthState   *state,
     AlgaopsStatus s = csv_reader_open(&reader, csv_path);
     if (s != ALGAOPS_OK) return s;
 
-    /* Optionally screen baseline records with TrustGuard. */
-    TrustGuardState tg_state;
-    bool use_tg = (tg_config != NULL);
-    if (use_tg) {
-        if (trustguard_init(&tg_state, tg_config) != ALGAOPS_OK) {
-            use_tg = false;
+    /* Optionally screen baseline records with TrustGuard.  The state is
+     * large (rolling windows), so keep it off the stack. */
+    TrustGuardState *tg_state = NULL;
+    if (tg_config != NULL) {
+        tg_state = (TrustGuardState *)malloc(sizeof(*tg_state));
+        if (tg_state && trustguard_init(tg_state, tg_config) != ALGAOPS_OK) {
+            free(tg_state);
+            tg_state = NULL;
         }
     }
 
-    Welford wv, wt;
-    welford_init(&wv);
-    welford_init(&wt);
+    AlgaBaselineBuilder builder;
+    alga_baseline_builder_init(&builder,
+                               ALGA_FMASK(ALGA_F_VIB_RMS) | ALGA_FMASK(ALGA_F_TEMP));
 
     int skipped = 0;
     AlgaRecord rec;
@@ -126,9 +101,9 @@ AlgaopsStatus equipment_health_load_baseline(EquipmentHealthState   *state,
         }
 
         /* Optional TrustGuard screening. */
-        if (use_tg) {
+        if (tg_state) {
             TrustResult tr;
-            trustguard_validate(&tg_state, &rec, &tr);
+            trustguard_validate(tg_state, &rec, &tr);
             if (!tr.is_trusted) {
                 fprintf(stderr,
                         "[equipment_health] baseline %s:%d: "
@@ -140,11 +115,15 @@ AlgaopsStatus equipment_health_load_baseline(EquipmentHealthState   *state,
             }
         }
 
-        welford_update(&wv, rec.vibration_rms_g);
-        welford_update(&wt, rec.temperature_c);
+        double x[ALGA_MAX_FEATURES] = { 0.0, 0.0, 0.0, 0.0 };
+        x[ALGA_F_VIB_RMS] = rec.vibration_rms_g;
+        x[ALGA_F_TEMP]    = rec.temperature_c;
+        alga_baseline_builder_add(&builder, x,
+                                  ALGA_FMASK(ALGA_F_VIB_RMS) | ALGA_FMASK(ALGA_F_TEMP));
     }
 
     csv_reader_close(&reader);
+    free(tg_state);
 
     if (skipped > 0) {
         fprintf(stderr,
@@ -152,7 +131,7 @@ AlgaopsStatus equipment_health_load_baseline(EquipmentHealthState   *state,
                 csv_path, skipped);
     }
 
-    int n = wv.n;  /* Both accumulators have same n. */
+    int n = (int)builder.n;
     if (n < state->config.min_baseline_samples) {
         fprintf(stderr,
                 "[equipment_health] baseline '%s': only %d eligible sample(s), "
@@ -161,10 +140,15 @@ AlgaopsStatus equipment_health_load_baseline(EquipmentHealthState   *state,
         return ALGAOPS_ERR_BASELINE;
     }
 
-    state->baseline.vib_mean_g   = wv.mean;
-    state->baseline.vib_std_g    = welford_std(&wv);
-    state->baseline.temp_mean_c  = wt.mean;
-    state->baseline.temp_std_c   = welford_std(&wt);
+    AlgaBaseline bl;
+    if (alga_baseline_builder_finish(&builder, ALGA_MODE_STEADY, 1u, &bl) != ALGAOPS_OK) {
+        return ALGAOPS_ERR_BASELINE;
+    }
+
+    state->baseline.vib_mean_g   = bl.mean[ALGA_F_VIB_RMS];
+    state->baseline.vib_std_g    = bl.std[ALGA_F_VIB_RMS];
+    state->baseline.temp_mean_c  = bl.mean[ALGA_F_TEMP];
+    state->baseline.temp_std_c   = bl.std[ALGA_F_TEMP];
     state->baseline.sample_count = n;
     state->baseline.is_valid     = true;
 
@@ -216,7 +200,7 @@ AlgaopsStatus equipment_health_evaluate(EquipmentHealthState *state,
         result->vib_z_score  = 0.0;
         result->temp_z_score = 0.0;
         snprintf(result->reason, ALGAOPS_EXPLANATION_LEN,
-                 "CHECK_SENSOR: data integrity blocked evaluation — %.450s",
+                 "CHECK_SENSOR: data integrity blocked evaluation — %.900s",
                  trust_result->explanation);
         return ALGAOPS_OK;
     }
@@ -227,17 +211,10 @@ AlgaopsStatus equipment_health_evaluate(EquipmentHealthState *state,
     const EquipmentHealthConfig *cfg = &state->config;
     const Baseline              *bl  = &state->baseline;
 
-    double vib_std  = (bl->vib_std_g  < cfg->min_std_dev)
-                      ? cfg->min_std_dev : bl->vib_std_g;
-    double temp_std = (bl->temp_std_c < cfg->min_std_dev)
-                      ? cfg->min_std_dev : bl->temp_std_c;
-
-    double z_vib  = fabs(record->vibration_rms_g - bl->vib_mean_g)  / vib_std;
-    double z_temp = fabs(record->temperature_c   - bl->temp_mean_c) / temp_std;
-
-    /* Safety: result must be finite. */
-    if (!isfinite(z_vib))  z_vib  = 0.0;
-    if (!isfinite(z_temp)) z_temp = 0.0;
+    double z_vib  = health_z(record->vibration_rms_g, bl->vib_mean_g,
+                             bl->vib_std_g, cfg->min_std_dev);
+    double z_temp = health_z(record->temperature_c, bl->temp_mean_c,
+                             bl->temp_std_c, cfg->min_std_dev);
 
     result->vib_z_score  = z_vib;
     result->temp_z_score = z_temp;
@@ -292,6 +269,7 @@ const char *diagnostic_outcome_str(DiagnosticOutcome outcome)
         case DIAG_NORMAL:          return "NORMAL";
         case DIAG_CHECK_SENSOR:    return "CHECK_SENSOR";
         case DIAG_CHECK_EQUIPMENT: return "CHECK_EQUIPMENT";
+        case DIAG_NOT_EVALUATED:   return "NOT_EVALUATED";
         default:                   return "UNKNOWN";
     }
 }

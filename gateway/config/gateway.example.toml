@@ -1,0 +1,60 @@
+# AlgaOps gateway configuration (copy to gateway.toml and adapt).
+# Relative paths are resolved against the directory of this file.
+# Secrets are NEVER written here: reference files that hold them instead.
+
+gateway_id = "gw-01"
+site = "lab"
+
+[mqtt]
+enabled = true
+host = "127.0.0.1"           # local Mosquitto (deploy/mosquitto/mosquitto.conf)
+port = 1883
+client_id = "algaops-gateway"  # fixed id + persistent session: queued QoS1 survives restarts
+topic_prefix = "algaops/v1"
+keepalive_s = 30
+# username = "algaops-gateway"
+# password_file = "/etc/algaops/mqtt_password"   # file readable by the gateway user only
+# tls_ca_file = "/etc/algaops/ca.crt"
+reconnect_min_s = 1
+reconnect_max_s = 60
+
+[storage]
+db_path = "../../var/algaops.db"
+checkpoint_file = "../../var/checkpoints.jsonl"   # put on a separate medium if possible
+checkpoint_every_events = 500
+checkpoint_every_s = 300
+export_dir = "../../var/exports"
+# 0 keeps every row (default).  N > 0: once a day, rows older than N days are written to an
+# archive bundle in export_dir, then pruned (docs/evidence-verification.md, "Retention").
+retention_days = 0
+
+[api]
+enabled = true
+host = "127.0.0.1"           # loopback only by default
+port = 8080
+# To serve the dashboard to the plant LAN, bind to the LAN address AND set a token:
+# host = "192.168.10.2"
+# token_file = "/etc/algaops/api_token"   # >= 16 random characters
+allow_insecure_lan = false
+
+[engine]
+# library_path = "/usr/local/lib/libalgaops.so"   # default: build tree, then system
+policy_file = "policy.default.toml"
+tick_interval_s = 1.0
+warm_start_windows = 1200
+
+[logging]
+level = "INFO"
+# file = "../../var/log/gateway.log"
+json = false
+
+[pbr]
+# Optional read-only PBR context (light/CO2/pH...) from a CSV export.
+# Enable ONLY with written approval of the PBR owner; never used for diagnosis.
+enabled = false
+# path = "/mnt/pbr-export/monitoring.csv"
+permission_confirmed = false
+poll_s = 10.0
+
+[demo]
+enabled = true               # scenario replay endpoints (synthetic data, clearly labelled)

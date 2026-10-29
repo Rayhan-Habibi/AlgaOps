@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:algaops:schema:scenario:v1",
+  "title": "AlgaOps simulator scenario v1",
+  "description": "simulator/scenarios/*.yaml. Faults set ground-truth labels that are kept outside the published payloads.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "name"],
+  "properties": {
+    "schema": {"const": "algaops.scenario.v1"},
+    "name": {"type": "string", "pattern": "^[a-z0-9_]{1,64}$"},
+    "description": {"type": "string"},
+    "node_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+    "seed": {"type": "integer"},
+    "boot_id": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "start_ms": {"type": "integer", "minimum": 0},
+    "window_ms": {"type": "integer", "minimum": 100},
+    "samples_per_window": {"type": "integer", "minimum": 2},
+    "sample_rate_hz": {"type": "number", "exclusiveMinimum": 0},
+    "duration_windows": {"type": "integer", "minimum": 1, "maximum": 200000},
+    "current_sensor": {"type": "boolean"},
+    "asset": {"type": "object"},
+    "schedule": {"type": "array", "items": {"type": "object", "required": ["at", "state"]}},
+    "baseline": {"type": ["string", "null"]},
+    "sensor_faults": {"type": "array", "items": {"type": "object", "required": ["type"],
+      "properties": {"type": {"enum": ["stuck_vibration", "stuck_temperature", "out_of_range", "non_finite", "self_test_failure", "node_fault", "sensor_disagreement", "clock_unsynced", "incomplete_window", "temp_spike", "inconsistent"]}}}},
+    "equipment_faults": {"type": "array", "items": {"type": "object", "required": ["type"],
+      "properties": {"type": {"enum": ["vibration_increase", "thermal_rise", "current_increase"]}}}},
+    "network": {"type": "array", "items": {"type": "object", "required": ["type"],
+      "properties": {"type": {"enum": ["drop", "duplicate_exact", "duplicate_conflict", "reorder", "bad_timestamp", "future_timestamp", "delay", "disconnect", "malformed", "reboot", "silence"]}}}}
+  }
+}

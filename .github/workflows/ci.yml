@@ -1,0 +1,85 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: C core + firmware host tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the C11 core (warnings are errors)
+        run: |
+          cmake -S algaops-assurance -B algaops-assurance/build -DCMAKE_BUILD_TYPE=Release -DALGAOPS_WERROR=ON
+          cmake --build algaops-assurance/build -j
+      - name: CTest (core, golden outcomes, Ascon KAT, CLI)
+        run: ctest --test-dir algaops-assurance/build --output-on-failure
+      - name: Firmware host tests (node logic, no hardware)
+        run: |
+          cmake -S firmware/esp32-sensor-node/host_test -B firmware/esp32-sensor-node/host_test/build -DNODE_HOST_WERROR=ON
+          cmake --build firmware/esp32-sensor-node/host_test/build -j
+          ctest --test-dir firmware/esp32-sensor-node/host_test/build --output-on-failure
+
+  python:
+    name: Gateway, simulator, tools, live e2e (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build the core library and firmware host tests
+        run: |
+          cmake -S algaops-assurance -B algaops-assurance/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build algaops-assurance/build -j
+          cmake -S firmware/esp32-sensor-node/host_test -B firmware/esp32-sensor-node/host_test/build
+          cmake --build firmware/esp32-sensor-node/host_test/build -j
+      - name: Install pinned dependencies
+        run: pip install -r gateway/requirements.lock -r simulator/requirements.lock
+      - name: pytest (unit, integration, security, contract, live MQTT e2e)
+        run: python -m pytest
+      - name: Labelled synthetic evaluation (quick)
+        run: PYTHONPATH=gateway:simulator python -m algaops_gateway evaluate --out var/evaluation/ci.json
+
+  dashboard:
+    name: Dashboard (type check, unit tests, build, browser tests)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - name: Core library and Python environment for the demo server
+        run: |
+          cmake -S algaops-assurance -B algaops-assurance/build -DCMAKE_BUILD_TYPE=Release
+          cmake --build algaops-assurance/build -j
+          pip install -r gateway/requirements.lock -r simulator/requirements.lock
+      - name: npm ci, Vitest, build
+        working-directory: dashboard
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+      - name: Playwright (bundled Chromium)
+        working-directory: dashboard
+        env:
+          ALGAOPS_BROWSER_CHANNEL: chromium
+          ALGAOPS_PYTHON: python
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test

@@ -1,0 +1,8 @@
+signal,esp32_pin,peripheral_pin,kconfig,notes
+3.3 V supply,3V3,ADXL345 VCC; ADXL345 CS; DS18B20 VDD (red),,CS high selects I2C
+Ground,GND,ADXL345 GND; ADXL345 SDO; DS18B20 GND (black),,SDO low: I2C address 0x53
+I2C SDA,GPIO21,ADXL345 SDA,ALGAOPS_I2C_SDA_GPIO,breakout has 4.7 kOhm pull-ups; keep the cable short
+I2C SCL,GPIO22,ADXL345 SCL,ALGAOPS_I2C_SCL_GPIO,400 kHz
+1-Wire data,GPIO4,DS18B20 DQ (yellow),ALGAOPS_ONEWIRE_GPIO,4.7 kOhm pull-up to 3.3 V
+CT signal (optional),GPIO34 (ADC1_CH6),CT lead B; lead A on the 1.65 V bias mid-point,ALGAOPS_CURRENT_ADC_GPIO,input-only pin; ADC1 works with Wi-Fi
+Power in,USB 5 V,,,certified USB supply only

@@ -1,0 +1,21 @@
+# AlgaOps Assurance - Synthetic Scenario: Stuck Temperature Sensor
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected fault: temperature_c frozen at exactly 28.10 for seven windows while
+# vibration varies normally (window_size = 5, stuck_temp_threshold_c = 0.01).
+#
+# Expected output (legacy profile, baseline_normal.csv):
+#   - seq=31..34: TRUSTED, NORMAL (window not yet full)
+#   - seq=35..37: TEMP_STUCK -> UNTRUSTED -> CHECK_SENSOR
+#   - seq=38..40: TRUSTED, NORMAL (temperature varies again)
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.10
+32000,32,0.419,28.10
+33000,33,0.422,28.10
+34000,34,0.420,28.10
+35000,35,0.418,28.10
+36000,36,0.421,28.10
+37000,37,0.420,28.10
+38000,38,0.419,28.20
+39000,39,0.422,28.30
+40000,40,0.420,28.20

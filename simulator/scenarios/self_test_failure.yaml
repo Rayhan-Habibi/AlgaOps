@@ -1,0 +1,10 @@
+schema: algaops.scenario.v1
+name: self_test_failure
+description: |
+  ADXL345 self-test reports FAIL for windows 100-129 and the node reports a DS18B20 CRC
+  error at 150-152. Both -> CHECK_SENSOR.
+seed: 1515
+duration_windows: 200
+sensor_faults:
+  - {type: self_test_failure, start: 100, end: 130}
+  - {type: node_fault, start: 150, end: 153, faults: [TEMP_CRC]}

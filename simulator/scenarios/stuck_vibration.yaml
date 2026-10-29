@@ -1,0 +1,11 @@
+schema: algaops.scenario.v1
+name: stuck_vibration
+description: |
+  Accelerometer output frozen (zero peak-to-peak) for windows 150-179, then the node
+  repeats one stale feature set for windows 200-239 (detectable after 10 identical windows).
+  Expected: CHECK_SENSOR, never CHECK_EQUIPMENT.
+seed: 505
+duration_windows: 260
+sensor_faults:
+  - {type: stuck_vibration, start: 150, end: 180, mode: frozen}
+  - {type: stuck_vibration, start: 200, end: 240, mode: repeat}

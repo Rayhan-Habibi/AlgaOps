@@ -1,0 +1,16 @@
+# AlgaOps Assurance - Synthetic Scenario: Out-of-Order Sequence
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected fault: seq=34 arrives before seq=33.
+#
+# Expected output (legacy profile, baseline_normal.csv):
+#   - seq=34: MISSING_PACKET (informational) -> TRUSTED, NORMAL
+#   - seq=33 (late): OUT_OF_ORDER_SEQ -> UNTRUSTED -> CHECK_SENSOR
+#   - all other rows: TRUSTED, NORMAL
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+32000,32,0.419,28.1
+33000,34,0.422,28.3
+34000,33,0.420,28.0
+35000,35,0.418,28.2
+36000,36,0.421,28.1

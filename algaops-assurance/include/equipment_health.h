@@ -112,7 +112,8 @@ AlgaopsStatus equipment_health_evaluate(EquipmentHealthState *state,
 
 /**
  * @brief Return a constant string label for a DiagnosticOutcome value.
+ *        ("NORMAL", "CHECK_SENSOR", "CHECK_EQUIPMENT", "NOT_EVALUATED").
  */
-const char *diagnostic_outcome_str(DiagnosticOutcome outcome);
+ALGAOPS_API const char *diagnostic_outcome_str(DiagnosticOutcome outcome);
 
 #endif /* EQUIPMENT_HEALTH_H */

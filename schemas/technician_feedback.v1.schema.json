@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:algaops:schema:technician_feedback:v1",
+  "title": "AlgaOps technician feedback v1",
+  "description": "Body of POST /api/alerts/{id}/feedback. Feedback is audited evidence for later calibration; it never changes a stored decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["verdict", "technician"],
+  "properties": {
+    "verdict": {"enum": ["true_alarm", "false_alarm", "unsure"]},
+    "note": {"type": "string", "maxLength": 500},
+    "technician": {"type": "string", "minLength": 1, "maxLength": 64}
+  }
+}

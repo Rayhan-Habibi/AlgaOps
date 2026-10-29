@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:algaops:schema:diagnostic_event:v1",
+  "title": "AlgaOps diagnostic event v1",
+  "description": "One decision of the C11 core as stored by the gateway (diagnostics.decision_json). Its canonical JSON is hashed (decision_digest) and bound into the audit chain.",
+  "type": "object",
+  "required": ["schema", "kind", "node_id", "data_source", "boot_id", "seq", "timestamp_ms", "received_ms", "decided_ms", "trust", "outcome", "mode", "methods", "alert", "stream", "reason", "policy_hash", "engine_version"],
+  "properties": {
+    "schema": {"const": "algaops.diagnostic_event.v1"},
+    "kind": {"enum": ["window", "stream_timeout", "malformed"]},
+    "node_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+    "data_source": {"enum": ["hardware", "simulator", "replay", "unknown"]},
+    "boot_id": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "seq": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "timestamp_ms": {"type": "integer", "minimum": 0},
+    "received_ms": {"type": "integer", "minimum": 0},
+    "decided_ms": {"type": "integer", "minimum": 0},
+    "trust": {
+      "type": "object",
+      "required": ["score", "trusted", "flag_bits", "flags", "blocking", "explanation"],
+      "properties": {
+        "score": {"type": "integer", "minimum": 0, "maximum": 100},
+        "trusted": {"type": "boolean"},
+        "flag_bits": {"type": "integer", "minimum": 0},
+        "flags": {"type": "array", "items": {"type": "string"}},
+        "blocking": {"type": "boolean"},
+        "explanation": {"type": "string"}
+      }
+    },
+    "outcome": {"enum": ["NORMAL", "CHECK_SENSOR", "CHECK_EQUIPMENT", "NOT_EVALUATED"]},
+    "mode": {"enum": ["UNKNOWN", "OFF", "STARTUP", "STEADY"]},
+    "mode_changed": {"type": "boolean"},
+    "time_in_mode_ms": {"type": "integer", "minimum": 0},
+    "method": {"enum": ["fixed", "zscore", "mahalanobis", null]},
+    "decided_by": {"enum": ["fixed", "zscore", "mahalanobis", null]},
+    "baseline_id": {"type": ["integer", "null"]},
+    "features": {"type": "object", "additionalProperties": {"type": ["number", "null"]}},
+    "methods": {"type": "object", "additionalProperties": {"type": "object", "required": ["status"],
+                "properties": {"status": {"enum": ["skipped", "ok", "unavailable"]}}}},
+    "alert": {"type": "object", "required": ["event", "kind", "prev_kind", "consecutive"],
+              "properties": {"event": {"enum": ["NONE", "OPENED", "CLEARED", "CHANGED"]}}},
+    "stream": {"type": "object", "properties": {"missing_count": {"type": "integer", "minimum": 0},
+               "completeness": {"type": ["number", "null"]}}},
+    "reason": {"type": "string"},
+    "policy_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "engine_version": {"type": "string"},
+    "window_digest": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {"if": {"properties": {"trust": {"properties": {"trusted": {"const": false}}}}},
+     "then": {"properties": {"outcome": {"const": "CHECK_SENSOR"}}}},
+    {"if": {"properties": {"outcome": {"const": "CHECK_EQUIPMENT"}}},
+     "then": {"properties": {"trust": {"properties": {"trusted": {"const": true}}}}}}
+  ]
+}

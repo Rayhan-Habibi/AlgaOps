@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:algaops:schema:telemetry_window:v1",
+  "title": "AlgaOps telemetry window v1",
+  "description": "One window summary published by a sensor node (ESP32 firmware or simulator) on algaops/v1/nodes/<node_id>/telemetry, QoS 1. Measurements may be null (sensor present but reading invalid) and are then reported as NON_FINITE by TrustGuard.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "node_id", "boot_id", "seq", "t_end_ms", "vib", "temp_c", "source"],
+  "dependentRequired": {
+    "t_start_ms": ["window_ms"], "window_ms": ["t_start_ms"],
+    "samples_expected": ["samples_valid"], "samples_valid": ["samples_expected"]
+  },
+  "properties": {
+    "schema": {"const": "algaops.telemetry_window.v1"},
+    "node_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+    "boot_id": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "seq": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "t_start_ms": {"type": "integer", "minimum": 0},
+    "t_end_ms": {"type": "integer", "minimum": 0, "description": "window end, node clock, Unix epoch ms"},
+    "window_ms": {"type": "integer", "minimum": 1, "maximum": 3600000},
+    "time_synced": {"type": "boolean"},
+    "sample_rate_hz": {"type": "number", "exclusiveMinimum": 0, "maximum": 100000},
+    "samples_expected": {"type": "integer", "minimum": 0, "maximum": 1000000},
+    "samples_valid": {"type": "integer", "minimum": 0, "maximum": 1000000},
+    "vib": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rms_g"],
+      "properties": {
+        "rms_g": {"type": ["number", "null"]},
+        "rms_axis_g": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": ["number", "null"]}},
+        "p2p_g": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": ["number", "null"]}},
+        "band_rms_g": {"type": "array", "minItems": 1, "maxItems": 4, "items": {"type": ["number", "null"]}},
+        "bands_hz": {"type": "array", "minItems": 1, "maxItems": 4,
+                     "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number", "exclusiveMinimum": 0}}}
+      }
+    },
+    "temp_c": {"type": ["number", "null"]},
+    "current_a": {"type": ["number", "null"]},
+    "self_test": {"enum": ["pass", "fail", "not_run"]},
+    "faults": {"type": "array", "uniqueItems": true, "items": {"enum": ["ACCEL_BUS", "ACCEL_OVERRUN", "ACCEL_MISSING", "TEMP_CRC", "TEMP_MISSING", "TEMP_POR", "CURRENT_ADC", "CURRENT_CLIP"]}},
+    "fw": {"type": "string", "minLength": 1, "maxLength": 32},
+    "source": {"enum": ["hardware", "simulator", "replay"]},
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "i2c_errors": {"type": "integer", "minimum": 0},
+        "ow_crc_errors": {"type": "integer", "minimum": 0},
+        "fifo_overruns": {"type": "integer", "minimum": 0},
+        "queue_depth": {"type": "integer", "minimum": 0},
+        "dropped_windows": {"type": "integer", "minimum": 0},
+        "uptime_s": {"type": "integer", "minimum": 0},
+        "reconnects": {"type": "integer", "minimum": 0},
+        "rssi_dbm": {"type": "integer", "minimum": -200, "maximum": 0}
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+schema: algaops.scenario.v1
+name: mode_transitions
+description: |
+  Repeated OFF -> STARTUP -> STEADY -> OFF cycles without faults. Start-up and
+  coast-down transients must not raise CHECK_EQUIPMENT.
+seed: 404
+duration_windows: 400
+schedule:
+  - {at: 0, state: off}
+  - {at: 40, state: on}
+  - {at: 140, state: off}
+  - {at: 180, state: on}
+  - {at: 280, state: off}
+  - {at: 320, state: on}

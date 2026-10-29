@@ -1,0 +1,11 @@
+{
+  "name": "AlgaOps Assurance",
+  "short_name": "AlgaOps",
+  "description": "Trust-gated edge diagnostics for photobioreactor auxiliary pumps and blowers (local, read-only)",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1716",
+  "theme_color": "#0f2d2a",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

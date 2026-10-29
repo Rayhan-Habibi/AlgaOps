@@ -1,0 +1,9 @@
+schema: algaops.scenario.v1
+name: equipment_thermal_anomaly
+description: |
+  Trusted data, casing temperature rising by +20 degC over 120 windows from window 150
+  (plausible rate). Expected: CHECK_EQUIPMENT once the fixed 45 degC limit is exceeded.
+seed: 1818
+duration_windows: 320
+equipment_faults:
+  - {type: thermal_rise, start: 150, end: 320, delta_c: 20.0, ramp_windows: 120}

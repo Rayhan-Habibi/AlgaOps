@@ -1,0 +1,7 @@
+schema: algaops.scenario.v1
+name: normal_steady
+description: |
+  Healthy pump running for 300 windows (~6.4 min). No injected faults.
+  Expected: NORMAL throughout (STARTUP judged by fixed limits, STEADY by z-score).
+seed: 202
+duration_windows: 300

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:algaops:schema:recording_session:v1",
+  "title": "AlgaOps hardware recording session v1",
+  "description": "Metadata stored next to every LIVE HARDWARE recording in data/hardware/ (docs/validation-protocol.md). Required before a recording may be used for baselines or validation claims.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "session_id", "node_id", "started_utc", "ended_utc", "firmware", "rig", "sensors", "operator", "conditions", "files"],
+  "properties": {
+    "schema": {"const": "algaops.recording_session.v1"},
+    "session_id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}$"},
+    "node_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+    "started_utc": {"type": "string", "format": "date-time"},
+    "ended_utc": {"type": "string", "format": "date-time"},
+    "firmware": {"type": "object", "required": ["version", "git_commit", "sdkconfig_digest"],
+                 "properties": {"version": {"type": "string"}, "git_commit": {"type": "string"}, "sdkconfig_digest": {"type": "string"}}},
+    "rig": {"type": "object", "required": ["asset", "mounting", "supply"],
+            "properties": {"asset": {"type": "string"}, "mounting": {"type": "string"}, "supply": {"type": "string"}, "photo_files": {"type": "array", "items": {"type": "string"}}}},
+    "sensors": {"type": "object", "required": ["adxl345", "ds18b20"],
+                "properties": {"adxl345": {"type": "object"}, "ds18b20": {"type": "object"}, "current": {"type": ["object", "null"]}}},
+    "reference_instruments": {"type": "array", "items": {"type": "object", "required": ["name", "quantity", "reading"],
+                              "properties": {"name": {"type": "string"}, "quantity": {"type": "string"}, "reading": {"type": "string"}, "calibration": {"type": "string"}}}},
+    "operator": {"type": "string"},
+    "supervisor_approval": {"type": "string", "description": "who approved the controlled deviation, if any"},
+    "conditions": {"type": "array", "items": {"type": "object", "required": ["from_utc", "to_utc", "label"],
+                   "properties": {"from_utc": {"type": "string"}, "to_utc": {"type": "string"},
+                                  "label": {"enum": ["normal", "sensor_fault_injected", "equipment_deviation_controlled", "transport_fault_injected"]},
+                                  "description": {"type": "string"}}}},
+    "files": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "description": "file name -> Ascon-Hash256 hex"},
+    "notes": {"type": "string"}
+  }
+}

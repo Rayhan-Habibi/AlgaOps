@@ -1,0 +1,18 @@
+item,part,quantity,required,notes
+1,ESP32-DevKitC (ESP32-WROOM-32E or similar),1,yes,sensor node controller; 2.4 GHz Wi-Fi
+2,ADXL345 breakout board (3.3 V; e.g. GY-291),1,yes,I2C; CS tied high; SDO low (address 0x53)
+3,DS18B20 waterproof probe (stainless; 3-wire),1,yes,external power; 1-Wire on GPIO 4
+4,Resistor 4.7 kOhm,1,yes,1-Wire pull-up DQ to 3.3 V
+5,IP65 enclosure with cable glands,1,yes,keep electronics out of splash zones
+6,Certified 5 V USB power supply and cable,1,yes,outside wet areas
+7,Mounting for the accelerometer (stud / two-component epoxy / magnet base),1,yes,rigid mount on the pump or blower housing
+8,Metal clamp or pipe clip and thermal paste,1,yes,DS18B20 on the casing surface
+9,Split-core current transformer with voltage output (e.g. 5 A / 1 V),1,optional,built-in burden; one conductor only
+10,Certified AC line splitter (plug-in),1,optional,lets the CT clamp one conductor without opening anything
+11,Resistors 10 kOhm (2) and capacitor 10 uF,1,optional,CT bias network to 1.65 V
+12,3.5 mm jack socket or screw terminal for the CT,1,optional,
+13,Raspberry Pi 4 or 5 (2 GB or more),1,yes (gateway),Raspberry Pi OS Bookworm 64-bit
+14,SSD (USB) or high-endurance microSD,1,yes (gateway),about 276 MB per node-day of history
+15,Official Raspberry Pi power supply,1,yes (gateway),
+16,RTC module (e.g. DS3231),1,optional,correct dates without internet
+17,Small UPS / power bank with pass-through,1,optional,clean shutdown on power loss

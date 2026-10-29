@@ -1,0 +1,15 @@
+schema: algaops.scenario.v1
+name: suspicious_plus_blocking
+description: |
+  Equipment-like vibration rise (from window 150) while the stream also has integrity
+  faults: frozen accelerometer at 170-174, regressive clock at 180, self-test FAIL 190-194.
+  Faulty windows must be CHECK_SENSOR; only trusted windows may be CHECK_EQUIPMENT.
+seed: 1919
+duration_windows: 220
+equipment_faults:
+  - {type: vibration_increase, start: 150, end: 220, factor: 3.0, ramp_windows: 10}
+sensor_faults:
+  - {type: stuck_vibration, start: 170, end: 175, mode: frozen}
+  - {type: self_test_failure, start: 190, end: 195}
+network:
+  - {type: bad_timestamp, at: 180, offset_ms: -5000}

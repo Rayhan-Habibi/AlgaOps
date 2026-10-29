@@ -1,0 +1,11 @@
+schema: algaops.scenario.v1
+name: missing_packet
+description: |
+  Sparse packet loss: single and short gaps. A gap alone is informational (MISSING_PACKET)
+  and the following window stays NORMAL; lost windows are logged and never treated as valid.
+seed: 707
+duration_windows: 240
+network:
+  - {type: drop, start: 60, count: 1}
+  - {type: drop, start: 100, count: 3}
+  - {type: drop, start: 170, count: 2}

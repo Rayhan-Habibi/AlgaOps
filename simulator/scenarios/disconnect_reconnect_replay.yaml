@@ -1,0 +1,12 @@
+schema: algaops.scenario.v1
+name: disconnect_reconnect_replay
+description: |
+  Wi-Fi outage for windows 100-129 (~38 s): the node buffers windows and flushes them in
+  order after reconnecting. Late windows (> 10 s) are STALE -> CHECK_SENSOR but complete the
+  history; the gateway reports a stream timeout during the outage. A reboot at window 170
+  restarts the sequence (informational REBOOT).
+seed: 2020
+duration_windows: 220
+network:
+  - {type: disconnect, start: 100, end: 130, buffer_capacity: 300, flush_interval_ms: 20}
+  - {type: reboot, at: 170}

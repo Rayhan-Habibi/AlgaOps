@@ -1,0 +1,5 @@
+## Espressif's RMT-based 1-Wire bus driver (ESP Component Registry).
+## The DS18B20 protocol on top of it is implemented in this component.
+dependencies:
+  espressif/onewire_bus: "^1.0.0"
+  idf: ">=5.2"

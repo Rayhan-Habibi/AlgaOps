@@ -1,0 +1,154 @@
+menu "AlgaOps sensor node"
+
+    config ALGAOPS_NODE_ID
+        string "Node id (empty: esp32-<Wi-Fi MAC>)"
+        default ""
+        help
+            1-64 characters: letters, digits, '_', '.', '-' (first character a
+            letter or digit).  Used as MQTT client id and in the topics.
+
+    config ALGAOPS_WIFI_SSID
+        string "Wi-Fi SSID"
+        default ""
+
+    config ALGAOPS_WIFI_PASSWORD
+        string "Wi-Fi password (WPA2 or better)"
+        default ""
+        help
+            Kept in the local sdkconfig, which is git-ignored.  Never commit it.
+
+    config ALGAOPS_MQTT_URI
+        string "MQTT broker URI (the gateway's Mosquitto)"
+        default "mqtt://192.168.1.10:1883"
+        help
+            Address of the Raspberry Pi gateway on the local network.  Replace
+            the placeholder.  Use mqtts:// with a CA certificate if the broker
+            listens with TLS.
+
+    config ALGAOPS_MQTT_USERNAME
+        string "MQTT username"
+        default ""
+
+    config ALGAOPS_MQTT_PASSWORD
+        string "MQTT password"
+        default ""
+
+    config ALGAOPS_MQTT_TOPIC_PREFIX
+        string "MQTT topic prefix"
+        default "algaops/v1"
+
+    config ALGAOPS_SNTP_SERVER
+        string "SNTP server (chrony on the gateway)"
+        default "192.168.1.10"
+        help
+            Local time source; the site needs no internet access.  Windows are
+            flagged CLOCK_UNSYNCED by the gateway until the clock is set.
+
+    config ALGAOPS_SYNC_WAIT_S
+        int "Hold telemetry until the clock is set (s)"
+        range 0 600
+        default 60
+        help
+            After connecting, windows stay buffered until SNTP has set the
+            clock (they are then published with correct times).  After this
+            delay they are published unsynchronised and flagged by the gateway.
+
+    menu "Sampling"
+
+        config ALGAOPS_WINDOW_MS
+            int "Window length (ms)"
+            range 500 10000
+            default 1280
+            help
+                800 Hz x 1.28 s = 1024 samples per window.  rate x window must
+                not exceed 8192 samples (FEATURES_MAX_SAMPLES).
+
+        choice ALGAOPS_ACCEL_RATE
+            prompt "ADXL345 output data rate"
+            default ALGAOPS_ACCEL_RATE_800
+            config ALGAOPS_ACCEL_RATE_400
+                bool "400 Hz"
+            config ALGAOPS_ACCEL_RATE_800
+                bool "800 Hz"
+            config ALGAOPS_ACCEL_RATE_1600
+                bool "1600 Hz"
+        endchoice
+
+        config ALGAOPS_ACCEL_RATE_HZ
+            int
+            default 400 if ALGAOPS_ACCEL_RATE_400
+            default 800 if ALGAOPS_ACCEL_RATE_800
+            default 1600 if ALGAOPS_ACCEL_RATE_1600
+
+        choice ALGAOPS_ACCEL_RANGE
+            prompt "ADXL345 range (full resolution, 3.9 mg/LSB on every range)"
+            default ALGAOPS_ACCEL_RANGE_8
+            config ALGAOPS_ACCEL_RANGE_2
+                bool "±2 g"
+            config ALGAOPS_ACCEL_RANGE_4
+                bool "±4 g"
+            config ALGAOPS_ACCEL_RANGE_8
+                bool "±8 g"
+            config ALGAOPS_ACCEL_RANGE_16
+                bool "±16 g"
+        endchoice
+
+        config ALGAOPS_ACCEL_RANGE_G
+            int
+            default 2 if ALGAOPS_ACCEL_RANGE_2
+            default 4 if ALGAOPS_ACCEL_RANGE_4
+            default 8 if ALGAOPS_ACCEL_RANGE_8
+            default 16 if ALGAOPS_ACCEL_RANGE_16
+
+        config ALGAOPS_ACCEL_SUPPLY_MV
+            int "ADXL345 supply voltage VS (mV), scales the self-test limits"
+            range 2000 3600
+            default 3300
+
+        config ALGAOPS_DS18B20_RESOLUTION
+            int "DS18B20 resolution (bits)"
+            range 9 12
+            default 12
+
+    endmenu
+
+    menu "Pins"
+
+        config ALGAOPS_I2C_SDA_GPIO
+            int "I2C SDA GPIO (ADXL345)"
+            default 21
+
+        config ALGAOPS_I2C_SCL_GPIO
+            int "I2C SCL GPIO (ADXL345)"
+            default 22
+
+        config ALGAOPS_I2C_HZ
+            int "I2C clock (Hz)"
+            range 100000 400000
+            default 400000
+
+        config ALGAOPS_ADXL345_ALT_ADDR
+            bool "ADXL345 SDO/ALT ADDRESS pin tied high (address 0x1D instead of 0x53)"
+            default n
+
+        config ALGAOPS_ONEWIRE_GPIO
+            int "1-Wire GPIO (DS18B20, 4.7 kOhm pull-up to 3.3 V)"
+            default 4
+
+    endmenu
+
+    config ALGAOPS_BUFFER_WINDOWS
+        int "Windows buffered while the network is down"
+        range 16 1024
+        default 256
+        help
+            256 windows of 1.28 s cover about 5.5 minutes (~100 bytes of RAM
+            each).  When full, the oldest window is dropped and the gateway
+            reports the gap.
+
+    config ALGAOPS_STATUS_INTERVAL_S
+        int "Status message interval (s)"
+        range 10 3600
+        default 60
+
+endmenu

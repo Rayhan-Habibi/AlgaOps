@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:algaops:schema:evidence_manifest:v1",
+  "title": "AlgaOps evidence manifest v1",
+  "description": "manifest.json of an evidence bundle (gateway zip or C CLI directory). File digests are Ascon-Hash256 hex; SHA-ASCON256SUMS repeats them in 'digest  name' form.",
+  "type": "object",
+  "required": ["schema", "producer", "hash_algorithm", "chain", "files"],
+  "properties": {
+    "schema": {"const": "algaops.evidence_manifest.v1"},
+    "producer": {"type": "string"},
+    "gateway_id": {"type": "string"},
+    "created_ms": {"type": "integer"},
+    "created_utc": {"type": "string"},
+    "hash_algorithm": {"const": "Ascon-Hash256 (NIST SP 800-232)"},
+    "chain": {"type": "object", "required": ["head_hash"],
+              "properties": {"events": {"type": "integer", "minimum": 0}, "head_seq": {"type": "integer"},
+                             "head_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "domain": {"const": "AlgaOps/audit/v1"}}},
+    "files": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+    "data_label": {"enum": ["DEMO / SYNTHETIC", "LIVE HARDWARE", "NO DATA"]},
+    "data_source": {"type": "string"},
+    "data_sources": {"type": "array", "items": {"type": "string"}},
+    "verification": {"type": "object", "properties": {"ok": {"type": "boolean"}, "issues": {"type": "integer"}}},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "policy_hash": {"type": "string"},
+    "disclaimer": {"type": "string"}
+  }
+}

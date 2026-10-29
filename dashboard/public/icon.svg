@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="AlgaOps">
+  <rect width="64" height="64" rx="14" fill="#0f2d2a"/>
+  <path d="M14 44c6-14 12-20 18-20s12 6 18 20" fill="none" stroke="#5fd3a5" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="32" cy="20" r="6" fill="#f2c14e"/>
+  <path d="M12 50h40" stroke="#5fd3a5" stroke-width="3" stroke-linecap="round" opacity=".6"/>
+</svg>

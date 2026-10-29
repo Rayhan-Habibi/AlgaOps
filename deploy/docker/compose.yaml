@@ -1,0 +1,74 @@
+# Optional container deployment (Docker Compose >= 2.23).  The native install
+# (deploy/raspberry-pi/install.sh) is the reference setup.
+#
+# Before `docker compose -f deploy/docker/compose.yaml up -d --build`, create
+# deploy/docker/secrets/ (git-ignored by the *_password / *.token patterns):
+#   api.token          >= 16 random characters (API write access)
+#   mqtt_password      password of the MQTT user "algaops-gateway"
+#   mosquitto_passwd   docker run --rm -it -v "$PWD/deploy/docker/secrets:/s" eclipse-mosquitto:2.0.20 \
+#                        mosquitto_passwd -c /s/mosquitto_passwd algaops-gateway
+#                      (then add one user per sensor node, named like the node id)
+name: algaops
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0.20
+    restart: unless-stopped
+    command: ["mosquitto", "-c", "/mosquitto/config/main.conf"]
+    configs:
+      - source: mosquitto_main
+        target: /mosquitto/config/main.conf
+    volumes:
+      - ../mosquitto/mosquitto.conf:/mosquitto/config/conf.d/algaops.conf:ro
+      - ../mosquitto/acl.conf:/etc/mosquitto/algaops/acl.conf:ro
+      - ./secrets/mosquitto_passwd:/etc/mosquitto/algaops/passwd:ro
+      - mosquitto-data:/mosquitto/data
+    ports:
+      - "1883:1883"            # sensor nodes on the plant LAN only; never forward from the internet
+
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/gateway.Dockerfile
+    restart: unless-stopped
+    depends_on: [mosquitto]
+    configs:
+      - source: gateway_toml
+        target: /etc/algaops/gateway.toml
+    volumes:
+      - ./secrets/api.token:/etc/algaops/api.token:ro
+      - ./secrets/mqtt_password:/etc/algaops/mqtt_password:ro
+      - algaops-data:/var/lib/algaops
+    ports:
+      - "127.0.0.1:8080:8080"  # dashboard and API on this host only
+
+configs:
+  mosquitto_main:
+    content: |
+      persistence true
+      persistence_location /mosquitto/data/
+      log_dest stdout
+      include_dir /mosquitto/config/conf.d
+  gateway_toml:
+    content: |
+      gateway_id = "gw-01"
+      site = "pbr-site"
+      [mqtt]
+      host = "mosquitto"
+      port = 1883
+      client_id = "algaops-gateway"
+      username = "algaops-gateway"
+      password_file = "/etc/algaops/mqtt_password"
+      [storage]
+      db_path = "/var/lib/algaops/algaops.db"
+      checkpoint_file = "/var/lib/algaops/checkpoints.jsonl"
+      export_dir = "/var/lib/algaops/exports"
+      [api]
+      host = "0.0.0.0"           # inside the container; published on 127.0.0.1 only
+      port = 8080
+      token_file = "/etc/algaops/api.token"
+      dashboard_dir = "/opt/algaops/dashboard"
+
+volumes:
+  mosquitto-data:
+  algaops-data:

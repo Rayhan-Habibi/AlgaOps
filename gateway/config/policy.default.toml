@@ -1,0 +1,92 @@
+# AlgaOps Assurance — default diagnostic policy.
+#
+# Read by the gateway (tomllib) AND by the C CLI (`algaops --config`), so it
+# must stay within the flat TOML subset understood by both: [section] headers,
+# `key = value` with numbers, true/false and "strings", and # comments.
+# Every key maps 1:1 onto algaops_config_set_number/_string in the C core.
+#
+# All thresholds are PRELIMINARY engineering parameters for a low-voltage
+# pump/blower test rig. They are not validated industrial diagnostic limits.
+# Re-tune them from baseline recordings of the real asset before relying on
+# them, and record every change (the policy hash is stored on each decision).
+
+[meta]
+name = "default"
+version = "2026.10-1"
+description = "PoC defaults: ADXL345 + DS18B20 (+ optional CT clamp), 1.28 s windows"
+
+[trust]
+vib_min_g = 0.0
+vib_max_g = 16.0                 # ADXL345 maximum range
+temp_min_c = -10.0
+temp_max_c = 125.0               # DS18B20 measurement range upper limit
+stuck_window_size = 10
+stuck_vib_threshold_g = 0.000000001   # exact repetition of the window RMS over 10 windows
+stuck_temp_window_size = 1000    # ~21 min of identical DS18B20 readings
+stuck_temp_threshold_c = 0.001   # below the 0.0625 degC DS18B20 step => identical values
+trust_score_threshold = 60
+min_window_completeness = 0.90   # valid/expected accelerometer samples per window
+max_staleness_ms = 10000
+max_future_skew_ms = 2000
+require_time_sync = true
+max_temp_rate_c_per_s = 2.0      # casing thermal mass: faster changes are implausible
+consistency_rel_tol = 0.05
+flag_zero_p2p_as_stuck = true    # frozen accelerometer output inside one window
+current_min_a = 0.0
+current_max_a = 30.0
+window_timing_tolerance_ms = 200
+history_reset_gap = 120
+
+[window]
+completeness_window = 120        # last 120 expected windows (~2.5 min)
+min_completeness = 0.8
+min_span = 30
+stream_timeout_ms = 15000        # silence => CHECK_SENSOR (never a stale NORMAL)
+
+[mode]
+enabled = true
+vib_on_g = 0.10
+vib_off_g = 0.05
+current_on_a = 0.50
+current_off_a = 0.20
+startup_ms = 20000
+
+[cross]
+enabled = true
+grace_ms = 10000
+
+[health]
+z_threshold = 3.0
+std_floor.vib_rms_g = 0.005
+std_floor.vib_p2p_g = 0.02
+std_floor.temp_c = 0.5
+std_floor.current_a = 0.05
+maha_threshold = 0.0             # 0 => chi-square 0.999 quantile for the feature count
+maha_shrinkage = 0.10
+maha_min_samples_per_dim = 10
+features.vib_rms_g = true
+features.vib_p2p_g = false
+features.temp_c = false          # casing temperature follows ambient: judged by fixed limits
+fixed_always_on = true           # absolute limits apply on top of the primary method
+features.current_a = true
+fixed.off.vib_max_g = 0.30
+fixed.off.temp_max_c = 45.0
+fixed.off.current_max_a = 0.0
+fixed.startup.vib_max_g = 1.50
+fixed.startup.temp_max_c = 45.0
+fixed.startup.current_max_a = 0.0
+fixed.steady.vib_max_g = 1.00
+fixed.steady.temp_max_c = 45.0
+fixed.steady.current_max_a = 0.0
+
+[method]
+off = "fixed"
+startup = "fixed"
+steady = "zscore"
+
+[baseline]
+min_samples = 30
+
+[alert]
+confirm_windows = 3
+clear_windows = 5

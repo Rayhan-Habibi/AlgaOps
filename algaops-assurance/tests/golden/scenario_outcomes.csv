@@ -1,0 +1,22 @@
+# Golden diagnostic outcomes, shared by the C engine tests (test_engine.c) and
+# the gateway parity tests (gateway/tests/integration/test_decision_parity.py).
+# expected: one letter per CSV data row, N=NORMAL S=CHECK_SENSOR
+#           E=CHECK_EQUIPMENT X=NOT_EVALUATED (malformed rows count as rows).
+# profile:  legacy = built-in v1-compatible defaults;
+#           policy = gateway/config/policy.default.toml
+# required_flags: '|'-separated flags that must appear in the scenario.
+scenario,profile,baseline,expected,required_flags
+data/scenario_normal.csv,legacy,data/baseline_normal.csv,NNNNNNNNNN,
+data/scenario_missing_packet.csv,legacy,data/baseline_normal.csv,NNNNNNN,MISSING_PACKET
+data/scenario_stuck_sensor.csv,legacy,data/baseline_normal.csv,NNNNSSNNNN,VIB_STUCK
+data/scenario_equipment_anomaly.csv,legacy,data/baseline_normal.csv,NNNNEEEEEE,
+data/scenario_bad_timestamp.csv,legacy,data/baseline_normal.csv,NNSNSN,BAD_TIMESTAMP
+data/scenario_duplicate_sequence.csv,legacy,data/baseline_normal.csv,NNSNNSN,DUPLICATE_SEQ
+data/scenario_out_of_order.csv,legacy,data/baseline_normal.csv,NNNSNN,OUT_OF_ORDER_SEQ|MISSING_PACKET
+data/scenario_out_of_range.csv,legacy,data/baseline_normal.csv,NSNSSNN,VIB_OUT_OF_RANGE|TEMP_OUT_OF_RANGE
+data/scenario_stuck_temperature.csv,legacy,data/baseline_normal.csv,NNNNSSSNNN,TEMP_STUCK
+data/scenario_suspicious_plus_blocking.csv,legacy,data/baseline_normal.csv,NNSSSSN,BAD_TIMESTAMP|DUPLICATE_SEQ|OUT_OF_ORDER_SEQ|VIB_OUT_OF_RANGE
+data/scenario_malformed.csv,legacy,data/baseline_normal.csv,NSSSSSN,MALFORMED|MISSING_PACKET
+data/v2/scenario_mode_transitions.csv,policy,data/v2/baseline_modes.csv,NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNXNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN,
+data/v2/scenario_self_test_failure.csv,policy,data/v2/baseline_modes.csv,NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNNNNNNNNNNNNNNNNNNNNSSSNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN,SELF_TEST_FAIL|SENSOR_FAULT
+data/v2/scenario_sensor_disagreement.csv,policy,data/v2/baseline_modes.csv,NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSNNNNNNNNNNNNNNNNNNNN,CROSS_SENSOR

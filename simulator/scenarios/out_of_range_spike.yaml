@@ -1,0 +1,11 @@
+schema: algaops.scenario.v1
+name: out_of_range_spike
+description: |
+  Physically implausible values: 60 g vibration at window 100, 150 degC at 120-122 and a
+  single +15 degC jump at 140 (SPIKE). All -> CHECK_SENSOR, never CHECK_EQUIPMENT.
+seed: 1212
+duration_windows: 200
+sensor_faults:
+  - {type: out_of_range, start: 100, end: 101, field: vib, value: 60.0}
+  - {type: out_of_range, start: 120, end: 123, field: temp, value: 150.0}
+  - {type: temp_spike, start: 140, end: 141, delta_c: 15.0}

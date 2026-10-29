@@ -1,0 +1,14 @@
+schema: algaops.scenario.v1
+name: malformed_payload
+description: |
+  Extra malformed messages after windows 60/80/100/120/140: truncated JSON, a leaked
+  ground-truth field, wrong schema version, missing temperature, wrong type. Each is
+  rejected (MALFORMED -> CHECK_SENSOR); valid windows around them stay NORMAL.
+seed: 1414
+duration_windows: 180
+network:
+  - {type: malformed, at: 60, kind: invalid_json}
+  - {type: malformed, at: 80, kind: unknown_field}
+  - {type: malformed, at: 100, kind: wrong_schema}
+  - {type: malformed, at: 120, kind: missing_field}
+  - {type: malformed, at: 140, kind: wrong_type}
