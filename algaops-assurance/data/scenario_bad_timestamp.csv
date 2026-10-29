@@ -1,0 +1,17 @@
+# AlgaOps Assurance - Synthetic Scenario: Bad / Regressive Timestamps
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected faults:
+#   - seq=33 carries a timestamp earlier than seq=32 (clock regression).
+#   - seq=35 repeats the timestamp of seq=34 (non-advancing clock).
+#
+# Expected output (legacy profile, baseline_normal.csv):
+#   - seq=31,32,34,36: TRUSTED, NORMAL
+#   - seq=33,35: BAD_TIMESTAMP -> UNTRUSTED -> CHECK_SENSOR
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+32000,32,0.419,28.1
+31500,33,0.422,28.3
+34000,34,0.420,28.0
+34000,35,0.418,28.2
+36000,36,0.421,28.1

@@ -1,0 +1,44 @@
+menu "AlgaOps current sensor (optional, clamp-on CT)"
+
+    config ALGAOPS_CURRENT_ENABLE
+        bool "A clamp-on current transformer is connected"
+        default n
+        help
+            Optional motor-current channel.  Use only a split-core current
+            transformer with a built-in burden and voltage output (for example
+            0-1 V AC at rated current), clamped around ONE insulated conductor
+            through a commercial AC line splitter or installed by a qualified
+            electrician.  Never open a live enclosure or strip insulation.
+            The CT output is biased to mid-supply and read on an ADC1 pin.
+            Without a CT the node publishes no "current_a" and the gateway
+            infers the operating mode from vibration.
+
+    config ALGAOPS_CURRENT_ADC_GPIO
+        int "ADC1 GPIO of the CT signal"
+        depends on ALGAOPS_CURRENT_ENABLE
+        range 32 39
+        default 34
+        help
+            ESP32 ADC1 pins only (GPIO 32-39); ADC2 is unavailable while
+            Wi-Fi is running.
+
+    config ALGAOPS_CURRENT_MA_PER_VOLT
+        int "CT scale: milliamps per volt RMS of the CT output"
+        depends on ALGAOPS_CURRENT_ENABLE
+        range 100 1000000
+        default 30000
+        help
+            Rated primary current divided by the rated output voltage, for
+            example 30 A / 1 V = 30000 mA/V.  Check the transformer label and
+            calibrate against a reference clamp meter on the real pump.
+
+    config ALGAOPS_CURRENT_SAMPLE_HZ
+        int "ADC sampling rate (Hz)"
+        depends on ALGAOPS_CURRENT_ENABLE
+        range 500 1000
+        default 1000
+        help
+            Samples are taken by a dedicated task with a 1 ms FreeRTOS tick
+            (CONFIG_FREERTOS_HZ=1000): 20 samples per 50 Hz mains cycle.
+
+endmenu

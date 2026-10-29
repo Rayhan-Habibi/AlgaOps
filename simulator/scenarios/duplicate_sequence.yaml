@@ -1,0 +1,10 @@
+schema: algaops.scenario.v1
+name: duplicate_sequence
+description: |
+  Window 90 is redelivered byte-identical (MQTT QoS 1 retry: dropped idempotently) and
+  window 140 is re-sent with the same sequence id but different content (DUPLICATE_SEQ).
+seed: 808
+duration_windows: 200
+network:
+  - {type: duplicate_exact, at: 90}
+  - {type: duplicate_conflict, at: 140}

@@ -1,0 +1,9 @@
+schema: algaops.scenario.v1
+name: out_of_order_sequence
+description: |
+  Windows 100 and 101 arrive swapped: 101 shows a one-window gap (informational),
+  the late window 100 is OUT_OF_ORDER -> CHECK_SENSOR.
+seed: 909
+duration_windows: 200
+network:
+  - {type: reorder, at: 100}

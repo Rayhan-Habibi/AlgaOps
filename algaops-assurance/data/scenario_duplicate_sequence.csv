@@ -1,0 +1,18 @@
+# AlgaOps Assurance - Synthetic Scenario: Duplicate Sequence IDs
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected faults: seq=32 and seq=34 are each sent twice with new timestamps
+# (conflicting duplicates, e.g. a node replaying its counter).  Exact MQTT
+# redeliveries are removed idempotently by the gateway before reaching the core.
+#
+# Expected output (legacy profile, baseline_normal.csv):
+#   - rows 3 and 6: DUPLICATE_SEQ -> UNTRUSTED -> CHECK_SENSOR
+#   - all other rows: TRUSTED, NORMAL
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+32000,32,0.419,28.1
+33000,32,0.422,28.3
+34000,33,0.420,28.0
+35000,34,0.418,28.2
+35500,34,0.418,28.2
+36000,35,0.421,28.1

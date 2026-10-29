@@ -1,0 +1,16 @@
+schema: algaops.scenario.v1
+name: baseline_modes
+description: |
+  Commissioning recording used to build OFF / STARTUP / STEADY baselines:
+  60 windows OFF, then three start/stop cycles (45 STARTUP and ~355 STEADY windows).
+  No faults. Every evaluation scenario uses these baselines (captured from trusted windows).
+seed: 101
+duration_windows: 520
+schedule:
+  - {at: 0, state: off}
+  - {at: 60, state: on}
+  - {at: 200, state: off}
+  - {at: 230, state: on}
+  - {at: 330, state: off}
+  - {at: 360, state: on}
+baseline: none

@@ -1,0 +1,9 @@
+schema: algaops.scenario.v1
+name: stale_late_delivery
+description: |
+  Windows 120-125 reach the gateway 20 s late (beyond the 10 s staleness limit): STALE ->
+  CHECK_SENSOR, stored for history but not used for live diagnosis.
+seed: 1111
+duration_windows: 200
+network:
+  - {type: delay, start: 120, end: 126, delay_ms: 20000}

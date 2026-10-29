@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+# Data, fixtures and hashed vectors must not be rewritten by line-ending
+# conversion: their digests are part of tests and evidence.
+*.csv    -text
+*.jsonl  -text
+algaops-assurance/tests/vectors/** -text
+
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+
+*.blend binary
+*.png   binary
+*.jpg   binary
+*.zip   binary
+*.db    binary

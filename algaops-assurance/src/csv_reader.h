@@ -5,10 +5,21 @@
  * Reads files conforming to the schema:
  *   timestamp_ms,sequence_id,vibration_rms_g,temperature_c
  *
+ * v2 files add optional named columns after (or around) the four v1 columns:
+ *   boot_id, received_ms, t_start_ms, window_ms, samples_expected,
+ *   samples_valid, vib_rms_x_g, vib_rms_y_g, vib_rms_z_g, vib_p2p_x_g,
+ *   vib_p2p_y_g, vib_p2p_z_g, current_a, self_test (not_run|pass|fail|0|1|2),
+ *   time_synced (0|1), node_fault_flags
+ * Columns are matched by header name when the header contains all four v1
+ * names; otherwise the v1 positional layout is used.  An empty optional cell
+ * means "not present".
+ *
  * Limitations:
  *  - Lines longer than CSV_MAX_LINE_LEN bytes are rejected.
  *  - Field values must be representable as uint64_t, uint32_t, or double.
- *  - Non-finite values (NaN, Inf) are flagged as parse errors.
+ *  - Non-finite values (NaN, Inf) are flagged as parse errors by
+ *    csv_reader_next(); csv_reader_next_window() passes them through so that
+ *    TrustGuard reports INTEGRITY_NON_FINITE with the record identity.
  *  - The header row (first non-empty line beginning with a letter) is skipped
  *    automatically.
  *  - Empty lines and lines starting with '#' are silently skipped.
@@ -22,7 +33,10 @@
 #include <stdio.h>
 
 /** Maximum supported CSV line length in bytes (including newline). */
-#define CSV_MAX_LINE_LEN 512
+#define CSV_MAX_LINE_LEN 1024
+
+/** Maximum number of columns tracked. */
+#define CSV_MAX_COLUMNS 32
 
 /**
  * @brief Opaque CSV reader context.
@@ -34,6 +48,9 @@ typedef struct {
     char     path[256];
     int      line_number;    /**< Current line number (1-indexed). */
     bool     header_skipped;
+    bool     named;          /**< columns mapped by header names     */
+    int      col[CSV_MAX_COLUMNS]; /**< field id per column index, -1 unknown */
+    int      n_cols;
 } CsvReader;
 
 /**
@@ -61,6 +78,12 @@ AlgaopsStatus csv_reader_open(CsvReader *reader, const char *path);
  *                          to attempt the next record.
  */
 AlgaopsStatus csv_reader_next(CsvReader *reader, AlgaRecord *record);
+
+/**
+ * @brief v2: read the next row as a telemetry window (optional columns set
+ *        the corresponding ALGA_HAS_* presence bits).
+ */
+AlgaopsStatus csv_reader_next_window(CsvReader *reader, AlgaWindow *window);
 
 /**
  * @brief Close the CSV reader and release the file handle.

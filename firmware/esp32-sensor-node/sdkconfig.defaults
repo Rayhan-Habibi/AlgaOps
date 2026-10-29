@@ -1,0 +1,20 @@
+# AlgaOps sensor node defaults (ESP32).  Wi-Fi and MQTT credentials are set
+# with `idf.py menuconfig` and stay in the local, git-ignored sdkconfig.
+CONFIG_IDF_TARGET="esp32"
+
+# 1 ms tick: 1 kHz CT sampling and 10 ms FIFO polling.
+CONFIG_FREERTOS_HZ=1000
+
+# The accel task is watched; a stalled sampler resets the node.
+CONFIG_ESP_TASK_WDT_INIT=y
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=5
+CONFIG_ESP_TASK_WDT_PANIC=y
+
+CONFIG_ESP_BROWNOUT_DET=y
+CONFIG_MQTT_PROTOCOL_311=y
+
+# Full printf (64-bit and floating point fields in the JSON payload).
+# CONFIG_NEWLIB_NANO_FORMAT is not set
+
+# Re-synchronise the clock with the gateway every 15 minutes.
+CONFIG_LWIP_SNTP_UPDATE_DELAY=900000

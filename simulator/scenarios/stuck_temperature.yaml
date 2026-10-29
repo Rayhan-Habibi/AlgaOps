@@ -1,0 +1,10 @@
+schema: algaops.scenario.v1
+name: stuck_temperature
+description: |
+  DS18B20 reading frozen from window 200 for 1200 windows (~26 min). Under the default
+  policy identical readings are flagged only after 1000 windows (~21 min), so detection
+  latency is long by design (a genuinely constant temperature is plausible).
+seed: 606
+duration_windows: 1500
+sensor_faults:
+  - {type: stuck_temperature, start: 200, end: 1400}

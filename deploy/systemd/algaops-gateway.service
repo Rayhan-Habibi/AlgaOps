@@ -1,0 +1,43 @@
+# /etc/systemd/system/algaops-gateway.service  (installed by deploy/raspberry-pi/install.sh)
+[Unit]
+Description=AlgaOps Assurance gateway (read-only trust-gated diagnostics)
+Documentation=file:///opt/algaops/docs/deployment-raspberry-pi.md
+After=network-online.target mosquitto.service chrony.service
+Wants=network-online.target mosquitto.service
+
+[Service]
+Type=simple
+User=algaops
+Group=algaops
+WorkingDirectory=/var/lib/algaops
+ExecStart=/opt/algaops/venv/bin/algaops-gateway --config /etc/algaops/gateway.toml run
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+UMask=0027
+
+# Hardening: the gateway only needs its data directory and the network.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/algaops
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+# MemoryDenyWriteExecute is left off: ctypes callbacks (libffi closures) need
+# executable trampolines when the core reports replayed decisions.
+
+[Install]
+WantedBy=multi-user.target

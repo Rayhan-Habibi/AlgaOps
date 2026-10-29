@@ -1,0 +1,15 @@
+schema: algaops.scenario.v1
+name: normal_8h_replay
+description: |
+  8 hours of healthy operation with four start/stop cycles and slow ambient drift.
+  Used to count false alarms per 8 h of normal data. No injected faults.
+seed: 303
+duration_windows: 22500
+schedule:
+  - {at: 0, state: on}
+  - {at: 5625, state: off}
+  - {at: 7031, state: on}
+  - {at: 12656, state: off}
+  - {at: 14062, state: on}
+  - {at: 19687, state: off}
+  - {at: 21093, state: on}

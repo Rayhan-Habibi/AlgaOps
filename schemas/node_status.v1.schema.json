@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:algaops:schema:node_status:v1",
+  "title": "AlgaOps node status v1",
+  "description": "Retained status on algaops/v1/nodes/<node_id>/status; the MQTT last will publishes state=offline. Informational only: never changes a diagnostic decision.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "node_id", "state"],
+  "properties": {
+    "schema": {"const": "algaops.node_status.v1"},
+    "node_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"},
+    "state": {"enum": ["online", "offline"]},
+    "boot_id": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "fw": {"type": "string", "maxLength": 64},
+    "uptime_s": {"type": "integer", "minimum": 0},
+    "rssi_dbm": {"type": "integer", "minimum": -200, "maximum": 0},
+    "queue_depth": {"type": "integer", "minimum": 0},
+    "dropped_windows": {"type": "integer", "minimum": 0},
+    "self_test": {"type": "string", "maxLength": 64},
+    "sensors": {"type": "object", "additionalProperties": {"type": "boolean"}},
+    "source": {"enum": ["hardware", "simulator", "replay"]},
+    "reset_reason": {"type": "string", "maxLength": 64},
+    "ts_ms": {"type": "integer", "minimum": 0}
+  }
+}

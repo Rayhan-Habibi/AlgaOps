@@ -1,0 +1,9 @@
+schema: algaops.scenario.v1
+name: equipment_vibration_anomaly
+description: |
+  Trusted data, vibration rising to 3x over 20 windows from window 150 (e.g. imbalance or
+  bearing wear on the test rig). Expected: CHECK_EQUIPMENT once the deviation is significant.
+seed: 1717
+duration_windows: 240
+equipment_faults:
+  - {type: vibration_increase, start: 150, end: 240, factor: 3.0, ramp_windows: 20}

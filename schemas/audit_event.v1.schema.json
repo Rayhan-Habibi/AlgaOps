@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:algaops:schema:audit_event:v1",
+  "title": "AlgaOps audit event line v1",
+  "description": "One exported audit chain event (audit_events.jsonl). hash = Ascon-Hash256('AlgaOps/audit/v1' || 0x00 || prev_hash || be64(seq) || UTF-8 payload). The payload string is the exact hashed text.",
+  "type": "object",
+  "required": ["seq", "ts_ms", "type", "payload", "prev_hash", "hash"],
+  "properties": {
+    "seq": {"type": "integer", "minimum": 1},
+    "ts_ms": {"type": "integer", "minimum": 0},
+    "type": {"type": "string", "enum": ["gateway.started", "gateway.stopped", "window.diagnosed", "stream.timeout", "ingest.rejected", "alert.opened", "alert.cleared", "alert.changed", "baseline.captured", "baseline.activated", "baseline.retired", "baseline.imported", "feedback.recorded", "export.created", "audit.verified", "node.status", "archive.created", "decision"]},
+    "node_id": {"type": ["string", "null"]},
+    "payload": {"type": "string", "contentMediaType": "application/json"},
+    "prev_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

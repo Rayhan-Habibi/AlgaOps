@@ -1,0 +1,41 @@
+name: firmware
+
+on:
+  push:
+    paths:
+      - "firmware/**"
+      - "algaops-assurance/src/features.c"
+      - "algaops-assurance/include/**"
+      - ".github/workflows/firmware.yml"
+  pull_request:
+    paths:
+      - "firmware/**"
+      - "algaops-assurance/src/features.c"
+      - "algaops-assurance/include/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  esp-idf:
+    name: ESP-IDF ${{ matrix.idf }} (esp32)
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        idf: ["v5.3.1", "latest"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sensor-node firmware
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: ${{ matrix.idf }}
+          target: esp32
+          path: firmware/esp32-sensor-node
+      - name: Hardware-in-the-loop test app (build only)
+        uses: espressif/esp-idf-ci-action@v1
+        with:
+          esp_idf_version: ${{ matrix.idf }}
+          target: esp32
+          path: firmware/esp32-sensor-node/test_app

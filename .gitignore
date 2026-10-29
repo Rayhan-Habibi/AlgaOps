@@ -1,12 +1,5 @@
-# Blender backups
-*.blend1
-*.blend2
-*.blend@
-
-# Build & binary artifacts
+# --- Build output (C core, firmware host tests, CMake) ---
 build/
-bin/
-lib/
 *.o
 *.obj
 *.exe
@@ -15,26 +8,60 @@ lib/
 *.dll
 *.dylib
 *.so
-
-# CMake artifacts
+*.pdb
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-Makefile
 CTestTestfile.cmake
 Testing/
 
-# Evaluation outputs & scratch
+# --- Python ---
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+wheelhouse/
+
+# --- Dashboard (built by `npm run build`, served by the gateway) ---
+node_modules/
+dashboard/dist/
+dashboard/test-results/
+dashboard/playwright-report/
+
+# --- ESP-IDF (local configuration holds Wi-Fi / MQTT credentials) ---
+firmware/**/sdkconfig
+firmware/**/sdkconfig.old
+firmware/**/managed_components/
+firmware/**/dependencies.lock
+
+# --- Gateway runtime data and secrets ---
+var/
+*.db
+*.db-wal
+*.db-shm
+gateway/config/gateway.toml
+deploy/docker/secrets/
+*.token
+*_password
+passwd
+*.pem
+*.key
+
+# --- Recorded field data stays local unless explicitly published ---
+data/hardware/*
+!data/hardware/.gitkeep
+
+# --- Output / temporary files ---
 results.csv
 *.tmp
 *.log
 scratch/
 
-# OS and Editor files
+# --- IDE / editor ---
 .vscode/
 .vs/
 .idea/
-Thumbs.db
-Desktop.ini
-.DS_Store
+*.swp
 *~
+.claude/settings.local.json

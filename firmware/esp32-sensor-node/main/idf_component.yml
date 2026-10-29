@@ -1,0 +1,3 @@
+## The I2C master driver (driver/i2c_master.h) used for the ADXL345 needs ESP-IDF 5.2+.
+dependencies:
+  idf: ">=5.2"

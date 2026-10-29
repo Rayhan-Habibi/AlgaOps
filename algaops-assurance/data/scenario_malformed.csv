@@ -1,0 +1,19 @@
+# AlgaOps Assurance - Synthetic Scenario: Malformed Records
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected faults: non-numeric timestamp, non-numeric vibration, missing
+# column, NaN temperature, negative timestamp.  Each malformed row is reported
+# as MALFORMED -> CHECK_SENSOR; the reader continues with the next row.
+#
+# Expected output (legacy profile, baseline_normal.csv):
+#   - row 1: TRUSTED, NORMAL
+#   - rows 2-6: MALFORMED -> CHECK_SENSOR
+#   - row 7 (seq=37): MISSING_PACKET (informational) -> TRUSTED, NORMAL
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+NOTANUMBER,32,0.419,28.1
+33000,33,abc,28.3
+34000,34,0.420
+35000,35,0.418,nan
+-36000,36,0.421,28.1
+37000,37,0.420,28.2

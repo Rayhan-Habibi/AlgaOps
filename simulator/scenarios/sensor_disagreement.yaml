@@ -1,0 +1,9 @@
+schema: algaops.scenario.v1
+name: sensor_disagreement
+description: |
+  Accelerometer detached at window 120 while the pump keeps drawing current: vibration
+  collapses with no current change -> CROSS_SENSOR -> CHECK_SENSOR (not a pump alarm).
+seed: 1616
+duration_windows: 220
+sensor_faults:
+  - {type: sensor_disagreement, start: 120, end: 200}

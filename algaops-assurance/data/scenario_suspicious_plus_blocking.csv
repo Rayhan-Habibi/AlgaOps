@@ -1,0 +1,19 @@
+# AlgaOps Assurance - Synthetic Scenario: Suspicious Values + Blocking Faults
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Every anomalous-looking row (5-60 g, 78-85 degC) also carries a blocking
+# integrity fault: regressive timestamp, duplicate sequence, out-of-order
+# sequence, out-of-range value.  The trust gate must report CHECK_SENSOR and
+# must never report CHECK_EQUIPMENT for these rows.
+#
+# Expected output (legacy profile, baseline_normal.csv):
+#   - rows 1, 2, 7: TRUSTED, NORMAL
+#   - rows 3-6: CHECK_SENSOR
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+32000,32,0.419,28.1
+31500,33,5.000,80.0
+33000,33,4.800,78.0
+33500,32,6.100,85.0
+34000,34,60.000,85.0
+35000,35,0.420,28.2

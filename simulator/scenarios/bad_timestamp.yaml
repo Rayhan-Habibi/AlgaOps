@@ -1,0 +1,10 @@
+schema: algaops.scenario.v1
+name: bad_timestamp
+description: |
+  Node clock steps back 5 s at window 110 (regressive timestamp -> BAD_TIMESTAMP) and jumps
+  60 s ahead at window 150 (FUTURE_TIMESTAMP). Both -> CHECK_SENSOR.
+seed: 1010
+duration_windows: 200
+network:
+  - {type: bad_timestamp, at: 110, offset_ms: -5000}
+  - {type: future_timestamp, at: 150, offset_ms: 60000}

@@ -1,0 +1,11 @@
+schema: algaops.scenario.v1
+name: non_finite_values
+description: |
+  null (non-finite) measurements: vibration at window 80, temperature at 100-101,
+  current at 120. Each -> NON_FINITE -> CHECK_SENSOR with the window identity kept.
+seed: 1313
+duration_windows: 160
+sensor_faults:
+  - {type: non_finite, start: 80, end: 81, field: vib}
+  - {type: non_finite, start: 100, end: 102, field: temp}
+  - {type: non_finite, start: 120, end: 121, field: current}

@@ -1,0 +1,19 @@
+# AlgaOps Assurance - Synthetic Scenario: Physically Implausible Values
+# SYNTHETIC DATA: Generated deterministically for demonstration purposes only.
+#
+# Injected faults: negative vibration RMS, 150 degC surface temperature and
+# 62 g vibration RMS (outside the configured plausible ranges).
+#
+# Expected output (legacy profile, baseline_normal.csv):
+#   - seq=32: VIB_OUT_OF_RANGE -> CHECK_SENSOR
+#   - seq=34: TEMP_OUT_OF_RANGE -> CHECK_SENSOR
+#   - seq=35: VIB_OUT_OF_RANGE -> CHECK_SENSOR (never CHECK_EQUIPMENT)
+#   - all other rows: TRUSTED, NORMAL
+timestamp_ms,sequence_id,vibration_rms_g,temperature_c
+31000,31,0.421,28.2
+32000,32,-0.050,28.1
+33000,33,0.422,28.3
+34000,34,0.420,150.0
+35000,35,62.000,28.2
+36000,36,0.419,28.1
+37000,37,0.421,28.0
