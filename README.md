@@ -247,8 +247,8 @@ python -I tools/verify_evidence.py out/evidence_bundle/
 
 ## 👥 Tim Pengusul (Universitas Andalas)
 
-- **Ahmad Saidi** (Ketua Tim Pelaksana)
-- **Rayhan Habibi** (Software & Embedded Systems Engineering)
+- **Ahmad Saidi** 
+- **Rayhan Habibi** 
 - **Yoan Purbolingga** (Dosen Pendamping)
 - **Filjisalim C. Ramadhana**
 - **Jenius Anugrah Ridwan**
