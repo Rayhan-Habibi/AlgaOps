@@ -16,6 +16,8 @@ $Root = Split-Path -Parent $PSScriptRoot
 $Venv = Join-Path $Root ".venv"
 $Bin = Join-Path $Venv "Scripts"
 $Py = Join-Path $Bin "python.exe"
+# The real binaries: pip's launchers in Scripts\ stop working when the repository folder moves.
+$CMake = Join-Path $Venv "Lib\site-packages\cmake\data\bin\cmake.exe"
 
 function Step([string]$Msg) { Write-Host "==> $Msg" -ForegroundColor Cyan }
 function Invoke-Checked([string]$Exe, [string[]]$ArgList) {
@@ -49,13 +51,13 @@ $Toolchain = @("-G", "Ninja", "-DCMAKE_BUILD_TYPE=Release",
 
 Step "C11 core (static + shared library, CLI, tests)"
 $Core = Join-Path $Root "algaops-assurance"
-Invoke-Checked "$Bin\cmake.exe" (@("-S", $Core, "-B", "$Core\build", "-DALGAOPS_WERROR=ON") + $Toolchain)
-Invoke-Checked "$Bin\cmake.exe" @("--build", "$Core\build")
+Invoke-Checked $CMake (@("-S", $Core, "-B", "$Core\build", "-DALGAOPS_WERROR=ON") + $Toolchain)
+Invoke-Checked $CMake @("--build", "$Core\build")
 
 Step "Firmware host tests (node logic without hardware)"
 $Host_ = Join-Path $Root "firmware\esp32-sensor-node\host_test"
-Invoke-Checked "$Bin\cmake.exe" (@("-S", $Host_, "-B", "$Host_\build", "-DNODE_HOST_WERROR=ON") + $Toolchain)
-Invoke-Checked "$Bin\cmake.exe" @("--build", "$Host_\build")
+Invoke-Checked $CMake (@("-S", $Host_, "-B", "$Host_\build", "-DNODE_HOST_WERROR=ON") + $Toolchain)
+Invoke-Checked $CMake @("--build", "$Host_\build")
 
 if (-not $SkipDashboard) {
     if (Get-Command npm -ErrorAction SilentlyContinue) {

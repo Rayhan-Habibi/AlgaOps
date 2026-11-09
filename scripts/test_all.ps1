@@ -14,6 +14,8 @@ param([switch]$Quick, [switch]$Browser)
 
 $Root = Split-Path -Parent $PSScriptRoot
 $Bin = Join-Path $Root ".venv\Scripts"
+# The real binary: pip's launchers in Scripts\ stop working when the repository folder moves.
+$CTest = Join-Path $Root ".venv\Lib\site-packages\cmake\data\bin\ctest.exe"
 $results = [ordered]@{}
 
 function Stage([string]$Name, [scriptblock]$Body) {
@@ -23,10 +25,10 @@ function Stage([string]$Name, [scriptblock]$Body) {
 }
 
 Stage "C core (CTest)" {
-    & "$Bin\ctest.exe" --test-dir "$Root\algaops-assurance\build" --output-on-failure
+    & $CTest --test-dir "$Root\algaops-assurance\build" --output-on-failure
 }
 Stage "Firmware host tests (CTest)" {
-    & "$Bin\ctest.exe" --test-dir "$Root\firmware\esp32-sensor-node\host_test\build" --output-on-failure
+    & $CTest --test-dir "$Root\firmware\esp32-sensor-node\host_test\build" --output-on-failure
 }
 Stage "Python: gateway, simulator, tools$(if (-not $Quick) { ', live e2e' })" {
     Push-Location $Root
