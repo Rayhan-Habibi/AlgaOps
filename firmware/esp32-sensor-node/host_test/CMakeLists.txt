@@ -40,8 +40,13 @@ add_library(node_logic STATIC
 target_include_directories(node_logic PUBLIC
     ${FW}/components/adxl345/include
     ${FW}/components/ds18b20/include
-    ${FW}/components/node_core/include
-    ${CORE}/include)
+    ${FW}/components/node_core/include)
+if(MSVC)
+    target_include_directories(node_logic PUBLIC ${CORE}/include)
+else()
+    # -iquote: the core's features.h must not shadow glibc's <features.h>.
+    target_compile_options(node_logic PUBLIC "-iquote${CORE}/include")
+endif()
 if(NOT WIN32)
     target_link_libraries(node_logic PUBLIC m)
 endif()
