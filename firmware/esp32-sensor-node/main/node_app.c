@@ -113,8 +113,11 @@ static void init_sensors(node_t *n)
     if (err == ESP_OK) {
         adxl345_config_t ac = {
             .bus = bus,
-            .address = CONFIG_ALGAOPS_ADXL345_ALT_ADDR ? ADXL345_I2C_ADDR_SDO_HIGH
-                                                       : ADXL345_I2C_ADDR_SDO_LOW,
+#if CONFIG_ALGAOPS_ADXL345_ALT_ADDR
+            .address = ADXL345_I2C_ADDR_SDO_HIGH,
+#else
+            .address = ADXL345_I2C_ADDR_SDO_LOW,
+#endif
             .scl_hz = CONFIG_ALGAOPS_I2C_HZ,
             .rate_hz = n->rate_hz,
             .range_g = CONFIG_ALGAOPS_ACCEL_RANGE_G,
@@ -449,10 +452,13 @@ void node_app_start(void)
     lwt.ts_ms = -1;
     if (status_payload_build(n->lwt, sizeof(n->lwt), n->node_id, &lwt) < 0) n->lwt[0] = '\0';
     if (wifi == ESP_OK) {
+        const char *user = (CONFIG_ALGAOPS_MQTT_USERNAME[0] != '\0')
+                               ? CONFIG_ALGAOPS_MQTT_USERNAME
+                               : n->node_id;
         mqtt_link_config_t mc = {
             .uri = CONFIG_ALGAOPS_MQTT_URI,
             .client_id = n->node_id,
-            .username = CONFIG_ALGAOPS_MQTT_USERNAME,
+            .username = user,
             .password = CONFIG_ALGAOPS_MQTT_PASSWORD,
             .lwt_topic = n->lwt[0] ? n->topic_status : NULL,
             .lwt_payload = n->lwt[0] ? n->lwt : NULL,

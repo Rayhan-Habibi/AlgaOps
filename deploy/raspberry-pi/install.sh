@@ -90,9 +90,10 @@ checkpoint_file = "/var/lib/algaops/checkpoints.jsonl"   # copy regularly to oth
 export_dir = "/var/lib/algaops/exports"
 
 [api]
-host = "127.0.0.1"          # set the LAN address to serve the dashboard on the plant network
+host = "127.0.0.1"          # set isolated plant LAN IP to expose UI; requires token_file below (never shared/public Wi-Fi)
 port = 8080
 token_file = "/etc/algaops/api_token"
+allow_insecure_lan = false
 dashboard_dir = "/opt/algaops/dashboard"
 
 [engine]

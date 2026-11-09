@@ -1,0 +1,67 @@
+# AlgaOps ESP32 Sensor Node Configuration Template
+# Copy this file to sdkconfig or apply settings via `idf.py menuconfig` -> "AlgaOps sensor node".
+#
+# IMPORTANT:
+# - Secrets (Wi-Fi and MQTT passwords) are local to sdkconfig, which is git-ignored.
+# - The target must be esp32 (`idf.py set-target esp32`).
+
+# ---- Microcontroller Target ----
+CONFIG_IDF_TARGET="esp32"
+CONFIG_FREERTOS_HZ=1000
+
+# ---- Task Watchdog & Reliability ----
+CONFIG_ESP_TASK_WDT_INIT=y
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=5
+CONFIG_ESP_TASK_WDT_PANIC=y
+CONFIG_ESP_BROWNOUT_DET=y
+
+# ---- Node Identity & Wi-Fi ----
+# Leave empty to auto-derive from MAC address (e.g. esp32-aabbccddeeff)
+CONFIG_ALGAOPS_NODE_ID="esp32-pbr-01"
+CONFIG_ALGAOPS_WIFI_SSID="AlgaOps-Plant"
+CONFIG_ALGAOPS_WIFI_PASSWORD="replace_with_plant_wpa2_key"
+
+# ---- MQTT Ingest & Authentication ----
+# IP address of the Raspberry Pi gateway on the isolated plant LAN/WLAN:
+CONFIG_ALGAOPS_MQTT_URI="mqtt://192.168.10.1:1883"
+CONFIG_MQTT_PROTOCOL_311=y
+CONFIG_ALGAOPS_MQTT_TOPIC_PREFIX="algaops/v1"
+
+# In Mosquitto ACL, username matches node_id (algaops/v1/nodes/%u/telemetry).
+# If left empty, firmware automatically defaults to CONFIG_ALGAOPS_NODE_ID:
+CONFIG_ALGAOPS_MQTT_USERNAME=""
+CONFIG_ALGAOPS_MQTT_PASSWORD="replace_with_node_mqtt_secret"
+
+# ---- Time Synchronization (SNTP) ----
+# Chrony NTP service on the Raspberry Pi gateway:
+CONFIG_ALGAOPS_SNTP_SERVER="192.168.10.1"
+CONFIG_LWIP_SNTP_UPDATE_DELAY=900000
+CONFIG_ALGAOPS_SYNC_WAIT_S=60
+
+# ---- Sensor Sampling & GPIO Mapping ----
+# Window: 800 Hz x 1.28 s = 1024 samples
+CONFIG_ALGAOPS_WINDOW_MS=1280
+CONFIG_ALGAOPS_ACCEL_RATE_800=y
+CONFIG_ALGAOPS_ACCEL_RANGE_8=y
+CONFIG_ALGAOPS_ACCEL_SUPPLY_MV=3300
+
+# ADXL345 I2C Bus: SDA=21, SCL=22, 400 kHz
+CONFIG_ALGAOPS_I2C_SDA_GPIO=21
+CONFIG_ALGAOPS_I2C_SCL_GPIO=22
+CONFIG_ALGAOPS_I2C_HZ=400000
+# Set to 'y' only if ADXL345 SDO pin is tied HIGH (address 0x1D instead of 0x53):
+# CONFIG_ALGAOPS_ADXL345_ALT_ADDR is not set
+
+# DS18B20 1-Wire: GPIO=4 (needs external 4.7 kOhm pull-up to 3.3V)
+CONFIG_ALGAOPS_ONEWIRE_GPIO=4
+CONFIG_ALGAOPS_DS18B20_RESOLUTION=12
+
+# Optional CT Current Sensor (disabled by default):
+# CONFIG_ALGAOPS_CURRENT_ENABLE is not set
+# CONFIG_ALGAOPS_CURRENT_ADC_GPIO=34
+
+# ---- Buffering & Health Reporting ----
+# 256 windows = ~5.5 minutes of offline buffering in SRAM during network drops:
+CONFIG_ALGAOPS_BUFFER_WINDOWS=256
+CONFIG_ALGAOPS_STATUS_INTERVAL_S=60
+

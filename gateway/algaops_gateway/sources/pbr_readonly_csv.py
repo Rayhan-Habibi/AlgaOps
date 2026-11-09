@@ -3,8 +3,9 @@
 Only enabled when the PBR owner has approved access (config:
 pbr.enabled = true AND pbr.permission_confirmed = true).  The file is opened
 read-only and tailed by byte offset; nothing is ever written to the PBR or
-its files.  Values are shown as context on the dashboard and are never used
-in any diagnostic decision.  No energy/CO2 saving is computed or claimed.
+its files.  Values are exposed via the read-only API (/api/pbr/context) and
+are never used in any diagnostic decision.  No energy/CO2 saving is computed
+or claimed.
 """
 
 from __future__ import annotations

@@ -13,7 +13,19 @@ function line(e: LogEntry): HTMLElement | null {
   if (e.type === "decision") {
     const o = d["outcome"] as Outcome;
     if (o === "NORMAL" && !d["alert_event"] || o === "NORMAL" && d["alert_event"] === "NONE") return null;
-    return h("li", { class: outcomeClass(o) }, h("time", {}, fmtTime(e.at)), h("b", {}, node),
+    const now = Date.now();
+    const receivedMs = typeof d["received_ms"] === "number" ? d["received_ms"] : null;
+    const domLatencyMs = receivedMs !== null ? Math.max(0, now - receivedMs) : null;
+    const attrs: Record<string, string> = { class: outcomeClass(o) };
+    if (receivedMs !== null) attrs["data-received-ms"] = String(receivedMs);
+    attrs["data-rendered-ms"] = String(now);
+    if (domLatencyMs !== null) {
+      attrs["data-dom-latency-ms"] = String(domLatencyMs);
+      if (typeof window !== "undefined") {
+        (window as unknown as Record<string, unknown>).__algaops_last_dom_latency_ms = domLatencyMs;
+      }
+    }
+    return h("li", attrs, h("time", {}, fmtTime(e.at)), h("b", {}, node),
              ` ${OUTCOME_LABEL[o] ?? o} — ${String(d["reason"] ?? "")}`);
   }
   if (e.type === "alert") {

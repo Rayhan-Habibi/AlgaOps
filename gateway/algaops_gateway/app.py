@@ -58,7 +58,7 @@ class GatewayApp:
             REPO_ROOT / "dashboard" / "dist"
         self.ctx = AppContext(config=config, lib=self.lib, policy=self.policy, db=self.db,
                               pipeline=self.pipeline, events=self.events, mqtt=self.mqtt,
-                              token=config.api_token(), dashboard_dir=Path(dist))
+                              token=config.api_token(), dashboard_dir=Path(dist), pbr=self.pbr)
         self.app = create_app(self.ctx)
         self._stop = threading.Event()
 

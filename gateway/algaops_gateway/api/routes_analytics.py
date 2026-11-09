@@ -32,7 +32,7 @@ class EvaluationManager:
         p = self.path
         return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else None
 
-    def start(self, full: bool) -> None:
+    def start(self, full: bool, durable: bool = False) -> None:
         with self._lock:
             if self.state == "running":
                 raise HTTPException(409, "an evaluation is already running")
@@ -41,7 +41,7 @@ class EvaluationManager:
         def run() -> None:
             try:
                 from ..analytics.evaluate import FULL, QUICK, evaluate
-                rep = evaluate(self.ctx.lib, self.ctx.policy, FULL if full else QUICK)
+                rep = evaluate(self.ctx.lib, self.ctx.policy, FULL if full else QUICK, durable=durable)
                 self.path.parent.mkdir(parents=True, exist_ok=True)
                 tmp = self.path.with_suffix(".part")
                 tmp.write_text(json.dumps(rep, indent=1), encoding="utf-8")
@@ -55,6 +55,7 @@ class EvaluationManager:
 
 class EvaluationIn(BaseModel):
     full: bool = False
+    durable: bool = False
 
 
 def _mgr(ctx: AppContext) -> EvaluationManager:
@@ -81,5 +82,5 @@ def run_evaluation(body: EvaluationIn, ctx: AppContext = Depends(get_ctx)) -> di
         import algaops_sim  # noqa: F401
     except ImportError:
         raise HTTPException(501, "simulator package not installed") from None
-    _mgr(ctx).start(body.full)
-    return {"state": "running", "full": body.full}
+    _mgr(ctx).start(body.full, durable=body.durable)
+    return {"state": "running", "full": body.full, "durable": body.durable}

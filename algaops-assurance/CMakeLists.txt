@@ -64,19 +64,39 @@ set(ALGAOPS_CORE_SOURCES
 
 # --- Static core library (CLI, tests, other C consumers) ---
 add_library(algaops_core STATIC ${ALGAOPS_CORE_SOURCES})
-target_include_directories(algaops_core PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/src   # csv_reader.h / linalg_small.h live in src/
-)
+if(MSVC)
+    target_include_directories(algaops_core PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src   # csv_reader.h / linalg_small.h live in src/
+    )
+else()
+    # Use -iquote on POSIX/GNU/Clang compilers to ensure include/features.h
+    # never shadows GNU libc's system <features.h> during #include <features.h>.
+    target_compile_options(algaops_core PUBLIC
+        "-iquote${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "-iquote${CMAKE_CURRENT_SOURCE_DIR}/src"
+        -D_POSIX_C_SOURCE=200809L
+        -D_DEFAULT_SOURCE
+    )
+endif()
 target_link_libraries(algaops_core PUBLIC ${ALGAOPS_MATH_LIB})
 
 # --- Shared library for the gateway (Python ctypes) ---
 if(ALGAOPS_BUILD_SHARED)
     add_library(algaops_shared SHARED ${ALGAOPS_CORE_SOURCES})
-    target_include_directories(algaops_shared PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-    )
+    if(MSVC)
+        target_include_directories(algaops_shared PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+        )
+    else()
+        target_compile_options(algaops_shared PRIVATE
+            "-iquote${CMAKE_CURRENT_SOURCE_DIR}/include"
+            "-iquote${CMAKE_CURRENT_SOURCE_DIR}/src"
+            -D_POSIX_C_SOURCE=200809L
+            -D_DEFAULT_SOURCE
+        )
+    endif()
     target_compile_definitions(algaops_shared PRIVATE ALGAOPS_BUILD_SHARED)
     target_link_libraries(algaops_shared PRIVATE ${ALGAOPS_MATH_LIB})
     set_target_properties(algaops_shared PROPERTIES

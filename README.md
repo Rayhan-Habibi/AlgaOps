@@ -47,7 +47,7 @@ Sistem monitoring prediktif IoT konvensional seringkali gagal di lingkungan PBR 
     <td><img src="AlgaOps_Gateway_CloseUp.png" width="450" alt="Gateway CloseUp"/></td>
   </tr>
   <tr>
-    <td><i>Sensor pod pemantau getaran 3-sumbu (RMS & kurtosis) dan suhu permukaan pada pompa sirkulasi PBR</i></td>
+    <td><i>Sensor pod pemantau getaran 3-sumbu (AC RMS & peak-to-peak) dan suhu permukaan pada pompa sirkulasi PBR</i></td>
     <td><i>Unit Edge Gateway offline-first dengan Ascon-Hash256 audit log dan dashboard lokal</i></td>
   </tr>
 </table>
@@ -70,10 +70,10 @@ AlgaOps Assurance dibangun dengan arsitektur modular yang memisahkan akusisi sen
                  ▼
 ┌────────────────────────────────────────────────────────┐
 │  ESP32 Sensor Node (firmware/esp32-sensor-node/)       │
-│  - 800 Hz vibration sampling -> RMS & kurtosis window  │
+│  - 800 Hz vibration sampling -> AC RMS & p2p window    │
 │  - MQTT Client (QoS 1, persistent session, back-off)   │
 └────────────────┬───────────────────────────────────────┘
-                 │ MQTT (algaops/telemetry/v1/{node_id})
+                 │ MQTT (algaops/v1/nodes/{node_id}/telemetry)
                  ▼
 ┌────────────────────────────────────────────────────────┐
 │  Edge Gateway Service (gateway/)                       │

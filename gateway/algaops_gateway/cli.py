@@ -152,16 +152,41 @@ def cmd_evaluate(args) -> int:
     cfg = _cfg(args)
     setup_logging("WARNING")
     lib, policy, _db = _open(cfg)
-    rep = evaluate(lib, policy, FULL if args.full else QUICK)
+    rep = evaluate(lib, policy, FULL if args.full else QUICK, durable=args.durable)
     out = Path(args.out) if args.out else cfg.resolve("var/evaluation/latest.json")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(rep, indent=1), encoding="utf-8")
     o = rep["overall"]
+    kpi = rep.get("kpi", {})
     print(rep["disclaimer"])
+    print(f"evidence label    {rep.get('evidence_label', 'SYNTHETIC SCENARIOS')}")
+    print(f"sqlite durable    {rep.get('sqlite_synchronous', 'OFF')} (durable={rep.get('durable', False)})")
     print(f"trust detection   {o['trust_detection']}")
     print(f"equipment         {o['equipment_detection']}")
+    if kpi:
+        print(f"EDR (Episode Detection Rate):  {kpi.get('edr')} "
+              f"({kpi.get('detected_episodes')}/{kpi.get('total_episodes')} blocking episodes "
+              "within the latency limit)")
+        print(f"equipment episodes detected:   {kpi.get('equipment_detected')}/"
+              f"{kpi.get('equipment_episodes')}")
+        tr = kpi.get("transport", {})
+        if tr:
+            print(f"GLR (drops found in gaps):     {kpi.get('glr')}")
+            print(f"reorder detection rate:        {tr.get('reorder_detection_rate')}")
+            print(f"delay detection rate:          {tr.get('delay_detection_rate')}")
+            print(f"total gap records:             {tr.get('total_gap_records')}")
+            print(f"gap records per injected drop: {tr.get('gap_record_to_drop_ratio')} "
+                  "(ratio, not recall)")
+        print(f"raw_window_recall:             {kpi.get('raw_window_recall')}")
+        print(f"false negatives (windows):     {kpi.get('fn_windows')}")
+        print(f"FP alerts (8h normal):         {kpi.get('fp_alert_8h')}")
+        print(f"FP windows (8h normal):        {kpi.get('fp_window_8h')}")
     for m, c in o["methods_steady"].items():
         print(f"method {m:11s} precision={c['precision']} recall={c['recall']} fpr={c['fpr']}")
+    if "baselines_comparison" in rep:
+        print("baseline comparison (synthetic scenarios):")
+        for bname, bstats in rep["baselines_comparison"].items():
+            print(f"  {bname:18s} precision={bstats['precision']} recall={bstats['recall']} fpr={bstats['fpr']}")
     print(f"attribution errors (CHECK_EQUIPMENT on sensor/transport faults): "
           f"{o['attribution_errors']}")
     print(f"report: {out}")
@@ -247,6 +272,7 @@ def main(argv: list[str] | None = None) -> int:
     pr.set_defaults(fn=cmd_prune)
     ev = sub.add_parser("evaluate", help="labelled synthetic evaluation")
     ev.add_argument("--full", action="store_true", help="include the 8 h and long scenarios")
+    ev.add_argument("--durable", action="store_true", help="use SQLite synchronous=FULL (durable benchmark with fsync)")
     ev.add_argument("--out")
     ev.set_defaults(fn=cmd_evaluate)
     r = sub.add_parser("replay", help="offline replay of a fixture into a separate DB")

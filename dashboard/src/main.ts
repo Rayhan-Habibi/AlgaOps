@@ -100,6 +100,10 @@ new EventStream({
 
 new Router(main, nav).start();
 
+if (typeof window !== "undefined") {
+  (window as unknown as Record<string, unknown>).__algaops_store = store;
+}
+
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").catch(() => undefined);

@@ -224,6 +224,7 @@ def _candidate_paths() -> list[Path]:
         repo / "build" / "algaops-assurance",
         repo / "build",
         Path(sys.prefix) / "lib",
+        Path("/opt/algaops/lib"),
         Path("/usr/local/lib"),
         Path("/usr/lib"),
     ]

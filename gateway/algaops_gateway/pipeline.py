@@ -70,24 +70,62 @@ class PipelineStats:
     queue_full: int = 0
     last_latency_ms: float | None = None
     latencies_ms: list[float] = field(default_factory=list)
+    core_latencies_ms: list[float] = field(default_factory=list)
+    commit_latencies_ms: list[float] = field(default_factory=list)
+    sse_latencies_ms: list[float] = field(default_factory=list)
 
-    def note_latency(self, ms: float) -> None:
+    def note_latency(self, ms: float, *, core_ms: float | None = None,
+                     commit_ms: float | None = None, sse_ms: float | None = None) -> None:
         self.last_latency_ms = ms
         self.latencies_ms.append(ms)
         if len(self.latencies_ms) > 5000:
             del self.latencies_ms[:1000]
+        if core_ms is not None:
+            self.core_latencies_ms.append(core_ms)
+            if len(self.core_latencies_ms) > 5000:
+                del self.core_latencies_ms[:1000]
+        if commit_ms is not None:
+            self.commit_latencies_ms.append(commit_ms)
+            if len(self.commit_latencies_ms) > 5000:
+                del self.commit_latencies_ms[:1000]
+        if sse_ms is not None:
+            self.sse_latencies_ms.append(sse_ms)
+            if len(self.sse_latencies_ms) > 5000:
+                del self.sse_latencies_ms[:1000]
 
     def snapshot(self) -> dict[str, Any]:
         lat = sorted(self.latencies_ms)
 
-        def pct(p: float) -> float | None:
-            return round(lat[min(len(lat) - 1, int(p * len(lat)))], 3) if lat else None
-        return {"received": self.received, "accepted": self.accepted,
-                "duplicate_deliveries": self.duplicate_deliveries, "rejected": self.rejected,
-                "stream_timeouts": self.stream_timeouts, "storage_errors": self.storage_errors,
-                "queue_full": self.queue_full,
-                "latency_ms": {"last": self.last_latency_ms, "p50": pct(0.5), "p95": pct(0.95),
-                               "max": lat[-1] if lat else None, "samples": len(lat)}}
+        def pct(arr: list[float], p: float) -> float | None:
+            return round(arr[min(len(arr) - 1, int(p * len(arr)))], 3) if arr else None
+
+        res: dict[str, Any] = {
+            "received": self.received, "accepted": self.accepted,
+            "duplicate_deliveries": self.duplicate_deliveries, "rejected": self.rejected,
+            "stream_timeouts": self.stream_timeouts, "storage_errors": self.storage_errors,
+            "queue_full": self.queue_full,
+            "latency_ms": {"last": self.last_latency_ms, "p50": pct(lat, 0.5), "p95": pct(lat, 0.95),
+                           "max": lat[-1] if lat else None, "samples": len(lat)}
+        }
+        if self.core_latencies_ms:
+            cl = sorted(self.core_latencies_ms)
+            res["core_decision_ms"] = {
+                "last": self.core_latencies_ms[-1], "p50": pct(cl, 0.5), "p95": pct(cl, 0.95),
+                "max": cl[-1], "samples": len(cl)
+            }
+        if self.commit_latencies_ms:
+            cml = sorted(self.commit_latencies_ms)
+            res["sqlite_commit_ms"] = {
+                "last": self.commit_latencies_ms[-1], "p50": pct(cml, 0.5), "p95": pct(cml, 0.95),
+                "max": cml[-1], "samples": len(cml)
+            }
+        if self.sse_latencies_ms:
+            sl = sorted(self.sse_latencies_ms)
+            res["sse_publish_ms"] = {
+                "last": self.sse_latencies_ms[-1], "p50": pct(sl, 0.5), "p95": pct(sl, 0.95),
+                "max": sl[-1], "samples": len(sl)
+            }
+        return res
 
 
 class Pipeline:
@@ -337,7 +375,9 @@ class Pipeline:
         node = nw.node_id
         eng = self._engine(node)
         cw = nw.to_c()
+        t_core_start = time.perf_counter()
         d = eng.process(cw)
+        t_core_end = time.perf_counter()
         decided = self.clock()
         record = nw.to_record()
         record_json = canonical_json(record)
@@ -347,8 +387,10 @@ class Pipeline:
                                        window_digest=record_digest)
         decision_json = rec.canonical()
         decision_digest = self.hasher.hexdigest(decision_json.encode("utf-8"))
-        latency = float(max(0, decided - nw.received_ms))
+        core_decision_ms = float(max(0, decided - nw.received_ms))
+        core_duration_ms = (t_core_end - t_core_start) * 1000.0
         alert_info: dict[str, Any] | None = None
+        t_commit_start = time.perf_counter()
         try:
             with self.db.transaction() as tx:
                 repo.upsert_node(tx, node, nw.source, nw.received_ms, nw.boot_id, nw.fw)
@@ -359,7 +401,7 @@ class Pipeline:
                 diag_id = repo.insert_diagnostic(tx, window_id=window_id, doc=rec.doc,
                                                  decision_json=decision_json,
                                                  decision_digest=decision_digest,
-                                                 latency_ms=latency)
+                                                 latency_ms=core_decision_ms)
                 if d.missing_count:
                     repo.insert_gap(tx, node, nw.boot_id, nw.seq, int(d.missing_count), decided)
                 ev = self.chain.append(tx, "window.diagnosed", decided, node, {
@@ -383,12 +425,33 @@ class Pipeline:
             log.exception("storage failed for %s seq %s; not acknowledged", node, nw.seq)
             self._rebuild_engine(node)
             return False
+        t_commit_end = time.perf_counter()
+        committed_ms = self.clock()
+        sqlite_commit_ms = float(max(0, committed_ms - nw.received_ms))
+        commit_duration_ms = (t_commit_end - t_commit_start) * 1000.0
         self.chain.commit()
         self.idem.remember(node, nw.boot_id, nw.seq, raw_digest)
         self.node_source[node] = nw.source
         self.stats.accepted += 1
-        self.stats.note_latency(latency)
-        self._after_decision(rec, diag_id, window_id, alert_info)
+
+        t_sse_start = time.perf_counter()
+        latencies_doc = {
+            "core_decision_ms": core_decision_ms,
+            "sqlite_commit_ms": sqlite_commit_ms,
+            "core_duration_ms": round(core_duration_ms, 3),
+            "commit_duration_ms": round(commit_duration_ms, 3),
+        }
+        self._after_decision(rec, diag_id, window_id, alert_info, latencies=latencies_doc)
+        t_sse_end = time.perf_counter()
+        published_ms = self.clock()
+        sse_publish_ms = float(max(0, published_ms - nw.received_ms))
+
+        self.stats.note_latency(
+            sqlite_commit_ms,
+            core_ms=core_decision_ms,
+            commit_ms=sqlite_commit_ms,
+            sse_ms=sse_publish_ms,
+        )
         done = self.capture.offer(node, cw, d)
         if done is not None:
             self._finish_capture(done)
@@ -435,15 +498,19 @@ class Pipeline:
         return None
 
     def _after_decision(self, rec: DecisionRecord, diag_id: int, window_id: int | None,
-                        alert_info: dict[str, Any] | None) -> None:
+                        alert_info: dict[str, Any] | None,
+                        latencies: dict[str, Any] | None = None) -> None:
         d = rec.doc
-        self.events.publish("decision", {
+        payload: dict[str, Any] = {
             "id": diag_id, "window_id": window_id, "node_id": d["node_id"], "kind": d["kind"],
             "outcome": d["outcome"], "trust_score": d["trust"]["score"],
             "flags": d["trust"]["flags"], "mode": d["mode"], "method": d["method"],
             "seq": d["seq"], "timestamp_ms": d["timestamp_ms"], "received_ms": d["received_ms"],
             "data_source": d["data_source"], "features": d["features"],
-            "reason": d["reason"][:300], "alert_event": d["alert"]["event"]})
+            "reason": d["reason"][:300], "alert_event": d["alert"]["event"]}
+        if latencies is not None:
+            payload["latencies"] = latencies
+        self.events.publish("decision", payload)
         if alert_info:
             self.events.publish("alert", {"node_id": d["node_id"], **alert_info})
 
